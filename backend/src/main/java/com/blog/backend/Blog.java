@@ -1,0 +1,41 @@
+package com.blog.backend;
+
+public class Blog {
+    private String id;
+    private String title;
+    private String content;
+    private String authorId;
+    private String category;
+    private String status;
+    private String imageUrl;
+    private String summary_ai;
+    private String createdAt;
+
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public String getAuthorId() { return authorId; }
+    public void setAuthorId(String authorId) { this.authorId = authorId; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public String getSummary_ai() { return summary_ai; }
+    public void setSummary_ai(String summary_ai) { this.summary_ai = summary_ai; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+}

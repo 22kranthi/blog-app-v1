@@ -1,0 +1,59 @@
+<div class="form-container">
+  <div class="form-card">
+    <div class="form-header">
+      <!-- 🔥 FIXED: editIndex → editId -->
+      <h2>{{ editId ? 'Edit Blog' : 'Create New Blog' }}</h2>
+      <p>Fill in the details below to publish your thought.</p>
+    </div>
+
+    <div class="form-body">
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input 
+          type="text" 
+          id="title" 
+          name="title" 
+          [(ngModel)]="title" 
+          required 
+          placeholder="E.g. Angular 17 Features">
+      </div>
+      
+      <div class="form-group">
+        <label for="category">Category</label>
+        <input 
+          type="text" 
+          id="category" 
+          name="category" 
+          [(ngModel)]="category" 
+          required 
+          placeholder="E.g. Technology, Lifestyle, Programming">
+      </div>
+      
+      <div class="form-group">
+        <label for="content">Content</label>
+        <textarea 
+          id="content" 
+          name="content" 
+          [(ngModel)]="content" 
+          rows="6" 
+          required 
+          placeholder="Write your amazing post here...">
+        </textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" (click)="save()" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            {{ editId ? 'Updating...' : 'Publishing...' }}
+          } @else {
+            {{ editId ? 'Update Post' : 'Publish Blog' }}
+          }
+        </button>
+
+        <button class="btn-secondary" routerLink="/" [disabled]="isSubmitting">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

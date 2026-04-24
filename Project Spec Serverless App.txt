@@ -1,0 +1,41 @@
+Project Spec: Serverless Java Full-Stack Blog Platform
+1. Project Overview
+A cloud-native, serverless blogging platform designed for high scalability and secure multi-user access. The application allows users to create and manage personal content while providing administrative oversight and AI-enhanced features.
+2. Technical Stack
+Frontend: Angular 17+ (NGRX for State Management, Standalone Components).
+Backend: Java 17/21 with Spring Cloud Function.
+API Layer: AWS AppSync (GraphQL).
+Database: Amazon DynamoDB (NoSQL).
+Authentication: Amazon Cognito (JWT-based RBAC).
+Storage: Amazon S3 (Static Hosting & Image Assets).
+AI Integration: Amazon Bedrock (Text Summarization) or Amazon Rekognition (Image Moderation).
+3. Functional Requirements
+A. User Management (RBAC)
+Guest: Can view all published blogs.
+User (Author): Can Create, Read, Update, and Delete (CRUD) their own posts.
+Admin: Full CRUD access to all posts; can manage user roles.
+B. Blog Features
+Rich Content: Blogs include Title, Author, Content, Category, Tags, and a Featured Image.
+Draft System: Ability to save blogs as DRAFT or PUBLISHED.
+Image Support: Direct-to-S3 uploads via Java-generated Pre-signed URLs.
+C. AI Enhancements
+Smart Summary: Automatically generate a 2-sentence summary of the blog using AI.
+Image Safety: Automatic scanning of uploaded images to prevent inappropriate content.
+4. System Architecture & Data Flow
+Auth: User logs in via Cognito 
+ receives a JWT.
+Request: Angular sends a GraphQL request to AppSync with the JWT in the header.
+Compute: AppSync triggers a Java Lambda (Spring Cloud Function).
+Logic: Java code validates permissions 
+ interacts with DynamoDB (Data) or S3 (Media).
+AI: Lambda calls Amazon Bedrock/Rekognition before final data persistence.
+Response: Data is returned via GraphQL to the Angular NGRX Store.
+5. Database Schema (DynamoDB)
+Partition Key (PK): BLOG#<ID>
+Sort Key (SK): METADATA
+Attributes: title, content, authorId, category, status, imageUrl, summary_ai, createdAt.
+GSI 1: PK: category, SK: createdAt (To fetch blogs by category).
+6. Success Metrics
+Performance: Sub-second response times using AWS Lambda SnapStart.
+Scalability: Zero-server management; scales automatically with user traffic.
+Security: 100% server-side validation of User vs. Admin permissions.

@@ -1,0 +1,10 @@
+com\blog\backend\Blog.class
+com\blog\backend\BlogRepository.class
+com\blog\backend\AppSyncEvent.class
+com\blog\backend\S3Service.class
+com\blog\backend\ServerlessBackendApplication.class
+com\blog\backend\AppSyncEvent$Identity.class
+com\blog\backend\AppSyncEvent$Info.class
+com\blog\backend\BlogFunctionConfig.class
+com\blog\backend\AwsConfig.class
+com\blog\backend\BedrockService.class

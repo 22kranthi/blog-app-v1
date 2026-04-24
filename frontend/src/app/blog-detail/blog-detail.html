@@ -1,0 +1,26 @@
+<div class="detail-container">
+  <div class="back-link">
+    <a routerLink="/" class="btn-back">← Back to Home</a>
+  </div>
+
+  <article class="detail-card" *ngIf="blog">
+    <header class="detail-header">
+      <h1>{{ blog.title }}</h1>
+      <p class="author">By <span>{{ blog.authorId || 'Anonymous' }}</span></p>
+    </header>
+    
+    <div *ngIf="blog.summary_ai" style="background: rgba(138,43,226,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #8a2be2; margin: 20px 0;">
+      <span style="font-size: 0.9rem; font-weight: bold; color: #8a2be2; text-transform: uppercase; letter-spacing: 1px;">✨ AI Summary</span>
+      <p style="margin: 8px 0 0; font-size: 1rem; font-style: italic; color: var(--text-secondary); line-height: 1.5;">{{ blog.summary_ai }}</p>
+    </div>
+
+    <div class="detail-content" style="margin-top: 20px; line-height: 1.6;">
+      <p>{{ blog.content }}</p>
+    </div>
+  </article>
+
+  <div class="empty-state" *ngIf="!blog">
+    <p>Blog post not found.</p>
+    <a routerLink="/" class="btn-primary">Return to Home</a>
+  </div>
+</div>

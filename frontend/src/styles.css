@@ -1,0 +1,79 @@
+@import "../node_modules/@aws-amplify/ui-angular/theme.css";
+
+:root {
+  /* Colors */
+  --bg-color: #f9fafb; /* light gray */
+  --card-bg: #ffffff;
+  --text-primary: #1e293b; /* dark slate */
+  --text-secondary: #64748b; /* slate */
+  --border-color: #e2e8f0;
+  
+  /* Accents */
+  --primary: #4f46e5; /* indigo-600 */
+  --primary-hover: #4338ca; /* indigo-700 */
+  --success: #10b981; /* emerald-500 */
+  --success-hover: #059669; /* emerald-600 */
+  --danger: #ef4444; /* red-500 */
+  --danger-hover: #dc2626; /* red-600 */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Border Radius */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Premium Amplify UI Theming */
+  --amplify-colors-brand-primary-10: #e0e7ff;
+  --amplify-colors-brand-primary-80: #4f46e5;
+  --amplify-colors-brand-primary-90: #4338ca;
+  --amplify-colors-brand-primary-100: #3730a3;
+  --amplify-components-authenticator-router-box-shadow: 0 0 0 0 transparent;
+  --amplify-components-authenticator-router-background-color: #ffffff;
+  --amplify-components-authenticator-router-border-width: 0;
+  --amplify-components-button-primary-background-color: var(--amplify-colors-brand-primary-80);
+  --amplify-components-button-primary-hover-background-color: var(--amplify-colors-brand-primary-90);
+  --amplify-components-fieldcontrol-border-color: #cbd5e1;
+  --amplify-components-fieldcontrol-focus-border-color: var(--amplify-colors-brand-primary-80);
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px var(--amplify-colors-brand-primary-10);
+  --amplify-components-tabs-item-active-color: var(--amplify-colors-brand-primary-80);
+  --amplify-components-tabs-item-active-border-color: var(--amplify-colors-brand-primary-80);
+  --amplify-radii-small: 6px;
+  --amplify-radii-medium: 8px;
+  --amplify-radii-large: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+  margin: 0;
+}
+
+button {
+  font-family: var(--font-family);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+input, textarea {
+  font-family: var(--font-family);
+  font-size: 1rem;
+}
