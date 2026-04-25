@@ -35,4 +35,8 @@ export class BlogList implements OnInit {
       this.store.dispatch(deleteBlog({ id }));
     }
   }
+
+  trackById(_index: number, blog: { id: string }) {
+    return blog.id;
+  }
 }

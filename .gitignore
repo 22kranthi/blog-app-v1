@@ -1,0 +1,26 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/mcp.json
+.idea/
+*.iml
+
+# Logs
+*.log
+blogAppLambda-logs.txt
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Build artifacts (also covered in subfolder gitignores)
+backend/target/
+backend/.aws-sam/
+frontend/dist/
+frontend/.angular/
+node_modules/

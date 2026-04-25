@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { map, switchMap } from 'rxjs/operators';
 import { getAllBlogs } from '../store/blog.selector';
 
 @Component({
@@ -14,6 +16,8 @@ import { getAllBlogs } from '../store/blog.selector';
 export class BlogDetail implements OnInit {
   blog: any = null;
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private store: Store,
     private route: ActivatedRoute,
@@ -21,17 +25,23 @@ export class BlogDetail implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-
-      if (id) {
-        this.store.select(getAllBlogs).subscribe(blogs => {
-          this.blog = blogs.find(b => b.id === id);
-
-          if (!this.blog) {
-            this.router.navigate(['/']);
-          }
-        });
+    this.route.paramMap.pipe(
+      switchMap(params => {
+        const id = params.get('id');
+        return this.store.select(getAllBlogs).pipe(
+          map(blogs => ({
+            id,
+            blog: id ? blogs.find(b => b.id === id) ?? null : null,
+            hasLoaded: blogs.length > 0
+          }))
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(({ id, blog, hasLoaded }) => {
+      if (!id) return;
+      this.blog = blog;
+      if (!blog && hasLoaded) {
+        this.router.navigate(['/']);
       }
     });
   }

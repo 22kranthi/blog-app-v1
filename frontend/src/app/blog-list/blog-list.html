@@ -3,34 +3,36 @@
   <p>Read the latest articles below.</p>
 </div>
 
-<div class="blog-grid" *ngIf="(blogList | async)?.length > 0; else noBlogs">
-  <div class="card" *ngFor="let blog of blogList | async">
-    
-    <div class="card-content">
-      <h3>{{ blog.title | uppercase }}</h3>
-      <p class="author">By {{ blog.authorId || 'Anonymous' }}</p>
-      
-      <div *ngIf="blog.summary_ai" style="background: rgba(138,43,226,0.1); padding: 10px; border-radius: 8px; border-left: 4px solid #8a2be2; margin-bottom: 15px;">
-        <span style="font-size: 0.8rem; font-weight: bold; color: #8a2be2; text-transform: uppercase; letter-spacing: 1px;">✨ AI Summary</span>
-        <p style="margin: 5px 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);">{{ blog.summary_ai }}</p>
+<ng-container *ngIf="blogList | async as blogs; else noBlogs">
+  <div class="blog-grid" *ngIf="blogs.length > 0; else noBlogs">
+    <div class="card" *ngFor="let blog of blogs; trackBy: trackById">
+
+      <div class="card-content">
+        <h3>{{ blog.title | uppercase }}</h3>
+        <div class="category-tags" *ngIf="blog.category">
+          <span class="tag">{{ blog.category }}</span>
+        </div>
+
+        <div *ngIf="blog.summary_ai" style="background: rgba(138,43,226,0.1); padding: 10px; border-radius: 8px; border-left: 4px solid #8a2be2; margin-bottom: 15px;">
+          <span style="font-size: 0.8rem; font-weight: bold; color: #8a2be2; text-transform: uppercase; letter-spacing: 1px;">✨ AI Summary</span>
+          <p style="margin: 5px 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);">{{ blog.summary_ai }}</p>
+        </div>
+
+        <p class="description">{{ blog.content | slice:0:150 }}...</p>
+
+        <a [routerLink]="['/blog', blog.id]" class="btn-read-more">
+          Read More →
+        </a>
       </div>
 
-      <p class="description">{{ blog.content | slice:0:150 }}...</p>
-      
-      <!-- 🔥 FIXED: use blog.id instead of index -->
-      <a [routerLink]="['/blog', blog.id]" class="btn-read-more">
-        Read More →
-      </a>
-    </div>
-    
-    <div class="actions" *ngIf="authService.isAdmin() || (authService.currentUserId() && authService.currentUserId() === blog.authorId)">
-      <!-- 🔥 FIXED -->
-      <button class="btn-edit" (click)="edit(blog.id)">Edit</button>
-      <button class="btn-delete" (click)="remove(blog.id)">Delete</button>
-    </div>
+      <div class="actions" *ngIf="authService.isAdmin() || (authService.currentUserId() && authService.currentUserId() === blog.authorId)">
+        <button class="btn-edit" (click)="edit(blog.id)">Edit</button>
+        <button class="btn-delete" (click)="remove(blog.id)">Delete</button>
+      </div>
 
+    </div>
   </div>
-</div>
+</ng-container>
 
 <ng-template #noBlogs>
   <div class="empty-state">

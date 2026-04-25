@@ -59,6 +59,26 @@ public class BlogRepository {
         return blogs;
     }
 
+    public List<Blog> listBlogsByCategory(String category) {
+        Map<String, AttributeValue> exprValues = new HashMap<>();
+        exprValues.put(":cat", AttributeValue.builder().s(category).build());
+
+        QueryRequest request = QueryRequest.builder()
+                .tableName(tableName)
+                .indexName("CategoryIndex")
+                .keyConditionExpression("category = :cat")
+                .expressionAttributeValues(exprValues)
+                .scanIndexForward(false)
+                .build();
+
+        QueryResponse response = dynamoDbClient.query(request);
+        List<Blog> blogs = new ArrayList<>();
+        for (Map<String, AttributeValue> item : response.items()) {
+            blogs.add(mapToBlog(item));
+        }
+        return blogs;
+    }
+
     public Blog getBlog(String id) {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("PK", AttributeValue.builder().s("BLOG#" + id).build());

@@ -34,7 +34,7 @@ public class BlogFunctionConfig {
                     case "createBlog":
                         return createBlog(arguments, event.getIdentity());
                     case "getUploadUrl":
-                        return getUploadUrl(arguments);
+                        return getUploadUrl(arguments, event.getIdentity());
                     case "deleteBlog":
                         return deleteBlog(arguments, event.getIdentity());
                     case "updateBlog":
@@ -46,6 +46,10 @@ public class BlogFunctionConfig {
                 switch (fieldName) {
                     case "listBlogs":
                         return listBlogs();
+                    case "getBlog":
+                        return getBlogQuery(arguments);
+                    case "listBlogsByCategory":
+                        return listBlogsByCategory(arguments);
                     default:
                         throw new IllegalArgumentException("Unknown query: " + fieldName);
                 }
@@ -59,6 +63,15 @@ public class BlogFunctionConfig {
         Object groups = identity.getClaims().get("cognito:groups");
         if (groups instanceof java.util.List) {
             return ((java.util.List<?>) groups).contains("ADMIN");
+        }
+        if (groups instanceof String) {
+            String s = ((String) groups).trim();
+            if (s.startsWith("[")) {
+                return s.contains("\"ADMIN\"");
+            }
+            for (String g : s.split(",")) {
+                if ("ADMIN".equals(g.trim())) return true;
+            }
         }
         return false;
     }
@@ -146,13 +159,32 @@ public class BlogFunctionConfig {
         return blog;
     }
 
-    private String getUploadUrl(Map<String, Object> args) {
+    private String getUploadUrl(Map<String, Object> args, AppSyncEvent.Identity identity) {
+        if (identity == null || identity.getUsername() == null || identity.getUsername().isBlank()) {
+            throw new RuntimeException("Unauthorized: authentication required to upload");
+        }
         String filename = (String) args.get("filename");
         String contentType = (String) args.get("contentType");
-        return s3Service.generatePresignedUrl(filename, contentType);
+        return s3Service.generatePresignedUrl(filename, contentType, identity.getUsername());
     }
 
     private java.util.List<Blog> listBlogs() {
         return blogRepository.listBlogs();
+    }
+
+    private Blog getBlogQuery(Map<String, Object> args) {
+        String id = (String) args.get("id");
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id is required");
+        }
+        return blogRepository.getBlog(id);
+    }
+
+    private java.util.List<Blog> listBlogsByCategory(Map<String, Object> args) {
+        String category = (String) args.get("category");
+        if (category == null || category.isBlank()) {
+            throw new IllegalArgumentException("category is required");
+        }
+        return blogRepository.listBlogsByCategory(category);
     }
 }

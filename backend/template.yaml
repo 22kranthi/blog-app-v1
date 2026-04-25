@@ -186,13 +186,14 @@ Resources:
   BlogBackendFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: target/serverless-backend-1.0.0-SNAPSHOT.jar
+      CodeUri: .
       Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
       Role: !GetAtt BlogFunctionRole.Arn
       Environment:
         Variables:
           MAIN_CLASS: com.blog.backend.ServerlessBackendApplication
-          SPRING_CLOUD_FUNCTION_DEFINITION: createBlog|listBlogs
+          SPRING_CLOUD_FUNCTION_DEFINITION: handleRequest
+          BEDROCK_REGION: us-east-1
       SnapStart:
         ApplyOn: PublishedVersions
 
@@ -240,6 +241,46 @@ Resources:
       ApiId: !GetAtt BlogAppSyncApi.ApiId
       TypeName: Query
       FieldName: listBlogs
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  GetBlogResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Query
+      FieldName: getBlog
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  ListBlogsByCategoryResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Query
+      FieldName: listBlogsByCategory
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  UpdateBlogResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: updateBlog
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  DeleteBlogResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: deleteBlog
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  GetUploadUrlResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: getUploadUrl
       DataSourceName: !GetAtt BlogLambdaDataSource.Name
 
 Outputs:

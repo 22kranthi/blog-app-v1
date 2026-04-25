@@ -7,9 +7,12 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
+import java.util.UUID;
 
 @Service
 public class S3Service {
+
+    private static final int MAX_FILENAME_LENGTH = 200;
 
     private final S3Presigner s3Presigner;
     private final String bucketName = System.getenv().getOrDefault("S3_BUCKET_NAME", "BlogImageBucket");
@@ -18,10 +21,27 @@ public class S3Service {
         this.s3Presigner = s3Presigner;
     }
 
-    public String generatePresignedUrl(String filename, String contentType) {
+    public String generatePresignedUrl(String filename, String contentType, String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (filename == null || filename.isBlank()) {
+            throw new IllegalArgumentException("filename is required");
+        }
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Only image/* content types are allowed");
+        }
+
+        String safeName = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (safeName.contains("..") || safeName.startsWith(".") || safeName.length() > MAX_FILENAME_LENGTH) {
+            throw new IllegalArgumentException("Invalid filename");
+        }
+        String safeUser = userId.replaceAll("[^a-zA-Z0-9_-]", "_");
+        String key = "uploads/" + safeUser + "/" + UUID.randomUUID() + "-" + safeName;
+
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key("uploads/" + filename)
+                .key(key)
                 .contentType(contentType)
                 .build();
 

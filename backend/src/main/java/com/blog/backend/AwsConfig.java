@@ -20,8 +20,9 @@ public class AwsConfig {
 
     @Bean
     public BedrockRuntimeClient bedrockRuntimeClient() {
+        String region = System.getenv().getOrDefault("BEDROCK_REGION", "us-east-1");
         return BedrockRuntimeClient.builder()
-                .region(Region.US_EAST_1)
+                .region(Region.of(region))
                 .build();
     }
 
