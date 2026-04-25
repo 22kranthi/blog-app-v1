@@ -26,6 +26,7 @@ export class BlogService {
             content
             category
             status
+            imageUrl
             summary_ai
             createdAt
           }
@@ -44,9 +45,9 @@ export class BlogService {
   private async _createBlog(blog: any) {
     return await this.getClient().graphql({
       query: `
-        mutation($title: String!, $content: String!, $category: String!) {
-          createBlog(title: $title, content: $content, category: $category) {
-            id title authorId content category status summary_ai createdAt
+        mutation($title: String!, $content: String!, $category: String!, $imageUrl: String) {
+          createBlog(title: $title, content: $content, category: $category, imageUrl: $imageUrl) {
+            id title authorId content category status imageUrl summary_ai createdAt
           }
         }
       `,
@@ -64,9 +65,9 @@ export class BlogService {
   private async _updateBlog(blog: any) {
     return await this.getClient().graphql({
       query: `
-        mutation($id: ID!, $title: String, $content: String, $category: String, $status: String) {
-          updateBlog(id: $id, title: $title, content: $content, category: $category, status: $status) {
-            id title authorId content category status summary_ai createdAt
+        mutation($id: ID!, $title: String, $content: String, $category: String, $status: String, $imageUrl: String) {
+          updateBlog(id: $id, title: $title, content: $content, category: $category, status: $status, imageUrl: $imageUrl) {
+            id title authorId content category status imageUrl summary_ai createdAt
           }
         }
       `,
@@ -109,5 +110,15 @@ export class BlogService {
       variables: { filename, contentType },
       authMode: 'userPool'
     } as any);
+  }
+
+  uploadFile(url: string, file: File) {
+    return from(fetch(url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type
+      }
+    }));
   }
 }

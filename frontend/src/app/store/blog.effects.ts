@@ -29,8 +29,8 @@ export class BlogEffects {
   addBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(addBlog),
-      switchMap(({ title, category, content }) =>
-        this.blogService.createBlog({ title, category, content }).pipe(
+      switchMap(({ title, category, content, imageUrl }) =>
+        this.blogService.createBlog({ title, category, content, imageUrl }).pipe(
           map(blog => addBlogSuccess({ blog })),
           catchError(err => {
             console.error('Failed to create blog:', err);
@@ -45,8 +45,8 @@ export class BlogEffects {
   updateBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(updateBlog),
-      switchMap(({ id, title, category, content }) =>
-        this.blogService.updateBlog({ id, title, category, content }).pipe(
+      switchMap(({ id, title, category, content, imageUrl, status }) =>
+        this.blogService.updateBlog({ id, title, category, content, imageUrl, status }).pipe(
           map(() => loadBlogs()),
           catchError(err => {
             console.error('Failed to update blog:', err);

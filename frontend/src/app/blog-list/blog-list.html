@@ -6,6 +6,9 @@
 <ng-container *ngIf="blogList | async as blogs; else noBlogs">
   <div class="blog-grid" *ngIf="blogs.length > 0; else noBlogs">
     <div class="card" *ngFor="let blog of blogs; trackBy: trackById">
+      <div class="card-image" *ngIf="blog.imageUrl">
+        <img [src]="blog.imageUrl" [alt]="blog.title">
+      </div>
 
       <div class="card-content">
         <h3>{{ blog.title | uppercase }}</h3>

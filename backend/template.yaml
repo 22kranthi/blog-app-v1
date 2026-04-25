@@ -55,6 +55,11 @@ Resources:
   BlogImageBucket:
     Type: AWS::S3::Bucket
     Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -68,6 +73,18 @@ Resources:
             AllowedOrigins:
               - '*' # Restrict this in production
             MaxAge: 3000
+
+  BlogImageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BlogImageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${BlogImageBucket}/uploads/*"
 
   # ---------------------------------------------------------
   # Cognito User Pool
@@ -133,8 +150,8 @@ Resources:
           listBlogsByCategory(category: String!): [Blog]
         }
         type Mutation {
-          createBlog(title: String!, content: String!, category: String!): Blog
-          updateBlog(id: ID!, title: String, content: String, category: String, status: String): Blog
+          createBlog(title: String!, content: String!, category: String!, imageUrl: String): Blog
+          updateBlog(id: ID!, title: String, content: String, category: String, status: String, imageUrl: String): Blog
           deleteBlog(id: ID!): Boolean
           getUploadUrl(filename: String!, contentType: String!): String
         }

@@ -6,8 +6,9 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { addBlog, addBlogSuccess, updateBlog, loadBlogs } from '../store/blog.action';
 import { getAllBlogs } from '../store/blog.selector';
 import { Actions, ofType } from '@ngrx/effects';
-import { take, Subscription } from 'rxjs';
+import { take, Subscription, firstValueFrom } from 'rxjs';
 import { AuthService } from '../auth.service';
+import { BlogService } from '../blog.service';
 
 @Component({
   selector: 'app-blog-form',
@@ -23,7 +24,12 @@ export class BlogForm implements OnInit, OnDestroy {
   isSubmitting: boolean = false;
 
   editId: string | null = null;
+  existingBlog: any = null;
+  imagePreview: string | null = null;
+  selectedFile: File | null = null;
+
   authService = inject(AuthService);
+  blogService = inject(BlogService);
   private actions$ = inject(Actions);
   private subscription = new Subscription();
 
@@ -41,6 +47,7 @@ export class BlogForm implements OnInit, OnDestroy {
         this.store.select(getAllBlogs).pipe(take(1)).subscribe(blogs => {
           const blog = blogs.find(b => b.id === id);
           if (blog) {
+            this.existingBlog = blog;
             this.title = blog.title;
             this.category = blog.category || '';
             this.content = blog.content;
@@ -66,7 +73,29 @@ export class BlogForm implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  save() {
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File is too large! Maximum 5MB allowed.");
+        event.target.value = '';
+        return;
+      }
+      this.selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeImage() {
+    this.selectedFile = null;
+    this.imagePreview = null;
+  }
+
+  async save() {
     if (!this.title.trim() || !this.category.trim() || !this.content.trim()) {
       alert("Please fill all the fields");
       return;
@@ -74,31 +103,50 @@ export class BlogForm implements OnInit, OnDestroy {
 
     this.isSubmitting = true;
 
-    if (this.editId) {
-      if (!this.authService.isAdmin() && (!this.authService.currentUserId())) {
-        alert("You do not have permission to edit blogs!");
-        this.isSubmitting = false;
-        return;
+    try {
+      let imageUrl = this.existingBlog?.imageUrl;
+
+      if (this.selectedFile) {
+        // 1. Get upload URL
+        const uploadUrl = await firstValueFrom(this.blogService.getUploadUrl(this.selectedFile.name, this.selectedFile.type));
+        // 2. Upload to S3
+        await firstValueFrom(this.blogService.uploadFile(uploadUrl, this.selectedFile));
+        // 3. Extract public URL (remove query params)
+        imageUrl = uploadUrl.split('?')[0];
       }
 
-      this.store.dispatch(updateBlog({
-        id: this.editId,
-        title: this.title,
-        category: this.category,
-        content: this.content
-      }));
+      if (this.editId) {
+        if (!this.authService.isAdmin() && this.authService.currentUserId() !== this.existingBlog?.authorId) {
+          alert("You do not have permission to edit this blog!");
+          this.isSubmitting = false;
+          return;
+        }
 
-    } else {
-      if (!this.authService.isAuthenticated()) {
-        alert("You must be logged in to post a blog.");
-        this.isSubmitting = false;
-        return;
+        this.store.dispatch(updateBlog({
+          id: this.editId,
+          title: this.title,
+          category: this.category,
+          content: this.content,
+          imageUrl: imageUrl
+        }));
+
+      } else {
+        if (!this.authService.isAuthenticated()) {
+          alert("You must be logged in to post a blog.");
+          this.isSubmitting = false;
+          return;
+        }
+        this.store.dispatch(addBlog({
+          title: this.title,
+          category: this.category,
+          content: this.content,
+          imageUrl: imageUrl
+        }));
       }
-      this.store.dispatch(addBlog({
-        title: this.title,
-        category: this.category,
-        content: this.content
-      }));
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Failed to process request. Please try again.");
+      this.isSubmitting = false;
     }
   }
 }

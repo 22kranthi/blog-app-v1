@@ -113,6 +113,7 @@ public class BlogFunctionConfig {
         String content = (String) args.get("content");
         String category = (String) args.get("category");
         String status = (String) args.get("status");
+        String imageUrl = (String) args.get("imageUrl");
 
         if (title != null) existing.setTitle(title);
         if (content != null) {
@@ -123,6 +124,7 @@ public class BlogFunctionConfig {
         }
         if (category != null) existing.setCategory(category);
         if (status != null) existing.setStatus(status);
+        if (imageUrl != null) existing.setImageUrl(imageUrl);
 
         blogRepository.updateBlog(existing);
         System.out.println("Successfully updated blog ID: " + id);
@@ -133,6 +135,7 @@ public class BlogFunctionConfig {
         String title = (String) args.get("title");
         String content = (String) args.get("content");
         String category = (String) args.get("category");
+        String imageUrl = (String) args.get("imageUrl");
         String authorId = identity != null && identity.getUsername() != null ? identity.getUsername() : "anonymous";
 
         System.out.println("Creating new blog. Title: " + title + ", Author: " + authorId);
@@ -148,6 +151,7 @@ public class BlogFunctionConfig {
         blog.setCategory(category);
         blog.setAuthorId(authorId);
         blog.setStatus("PUBLISHED");
+        blog.setImageUrl(imageUrl);
         blog.setSummary_ai(aiSummary);
         blog.setCreatedAt(java.time.Instant.now().toString());
 

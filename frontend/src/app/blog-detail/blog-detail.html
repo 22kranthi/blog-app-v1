@@ -8,6 +8,10 @@
       <h1>{{ blog.title }}</h1>
       <p class="author">By <span>{{ blog.authorId || 'Anonymous' }}</span></p>
     </header>
+
+    <div class="detail-image" *ngIf="blog.imageUrl">
+      <img [src]="blog.imageUrl" [alt]="blog.title">
+    </div>
     
     <div *ngIf="blog.summary_ai" style="background: rgba(138,43,226,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #8a2be2; margin: 20px 0;">
       <span style="font-size: 0.9rem; font-weight: bold; color: #8a2be2; text-transform: uppercase; letter-spacing: 1px;">✨ AI Summary</span>

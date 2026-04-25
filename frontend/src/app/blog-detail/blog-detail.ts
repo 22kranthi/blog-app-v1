@@ -5,6 +5,8 @@ import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
 import { getAllBlogs } from '../store/blog.selector';
+import { loadBlogs } from '../store/blog.action';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-blog-detail',
@@ -25,6 +27,13 @@ export class BlogDetail implements OnInit {
   ) {}
 
   ngOnInit() {
+    // If blogs aren't loaded yet (e.g. direct link), load them
+    this.store.select(getAllBlogs).pipe(take(1)).subscribe(blogs => {
+      if (blogs.length === 0) {
+        this.store.dispatch(loadBlogs());
+      }
+    });
+
     this.route.paramMap.pipe(
       switchMap(params => {
         const id = params.get('id');
