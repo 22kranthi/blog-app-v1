@@ -32,7 +32,50 @@ import { BlogList } from '../blog-list/blog-list';
         </div>
 
         <h3 style="margin-bottom: 1rem;">All Published Content</h3>
-        <app-blog-list mode="admin"></app-blog-list>
+        
+        <div class="admin-table-container" style="overflow-x: auto; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border-color); background: rgba(0,0,0,0.02);">
+                <th style="padding: 1rem;">Title</th>
+                <th style="padding: 1rem;">Author</th>
+                <th style="padding: 1rem;">Category</th>
+                <th style="padding: 1rem;">Created</th>
+                <th style="padding: 1rem; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let blog of (blogs$ | async)" style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 1rem; font-weight: 500;">
+                  <a [routerLink]="['/blog', blog.id]" style="color: var(--primary); text-decoration: none; hover: underline;">
+                    {{ blog.title }}
+                  </a>
+                </td>
+                <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                  {{ blog.authorName || (blog.authorId | slice:0:8) + '...' }}
+                </td>
+                <td style="padding: 1rem;">
+                  <span style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">
+                    {{ blog.category }}
+                  </span>
+                </td>
+                <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
+                  {{ blog.createdAt | date:'shortDate' }}
+                </td>
+                <td style="padding: 1rem; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                  <button [routerLink]="['/edit', blog.id]" 
+                          style="background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                    Edit
+                  </button>
+                  <button (click)="removeBlog(blog.id)" 
+                          style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       }
     </div>
   `
