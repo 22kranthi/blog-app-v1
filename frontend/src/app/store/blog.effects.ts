@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { BlogService } from '../blog.service';
-import { loadBlogs, loadBlogsSuccess, addBlog, addBlogSuccess, deleteBlog, updateBlog } from './blog.action';
+import { loadBlogs, loadBlogsSuccess, addBlog, addBlogSuccess, deleteBlog, updateBlog, filterBlogsByCategory, filterBlogsByCategorySuccess } from './blog.action';
 import { switchMap, map, catchError } from 'rxjs';
 import { of } from 'rxjs';
 
@@ -73,4 +73,22 @@ export class BlogEffects {
       )
     )
   );
-}
+
+  filterBlogsByCategory$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(filterBlogsByCategory),
+      switchMap(({ category }) => {
+        if (!category) {
+          return of(filterBlogsByCategorySuccess({ blogs: [] }));
+        }
+        return this.blogService.getBlogsByCategory(category).pipe(
+          map(blogs => filterBlogsByCategorySuccess({ blogs: blogs || [] })),
+          catchError(err => {
+            console.error('Failed to filter blogs by category:', err);
+            return of(filterBlogsByCategorySuccess({ blogs: [] }));
+          })
+        );
+      })
+    )
+  );
+}

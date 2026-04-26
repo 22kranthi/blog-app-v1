@@ -1,10 +1,20 @@
 import { createFeatureSelector, createSelector } from "@ngrx/store";
 import { Blog } from "../model/blog.model";
+import { BlogState } from "./blog.reducer";
 
-export const selectBlogState = createFeatureSelector<Blog[]>('blogs');
+export const selectBlogState = createFeatureSelector<BlogState>('blogs');
 
 export const getAllBlogs = createSelector(
-    selectBlogState,
-    (state)=>state
+  selectBlogState,
+  (state: BlogState) => state.filteredBlogs
+);
 
-)
+export const getAllBlogsUnfiltered = createSelector(
+  selectBlogState,
+  (state: BlogState) => state.allBlogs
+);
+
+export const getSelectedCategory = createSelector(
+  selectBlogState,
+  (state: BlogState) => state.selectedCategory
+);

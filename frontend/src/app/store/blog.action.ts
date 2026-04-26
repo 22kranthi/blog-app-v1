@@ -28,3 +28,13 @@ export const deleteBlog = createAction(
   '[Blog] Delete Blog',
   props<{ id: string }>()
 );
+
+export const filterBlogsByCategory = createAction(
+  '[Blog] Filter By Category',
+  props<{ category: string | null }>()
+);
+
+export const filterBlogsByCategorySuccess = createAction(
+  '[Blog] Filter By Category Success',
+  props<{ blogs: Blog[] }>()
+);

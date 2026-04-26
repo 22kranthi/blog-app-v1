@@ -112,6 +112,34 @@ export class BlogService {
     } as any);
   }
 
+  getBlogsByCategory(category: string) {
+    return from(this._getBlogsByCategory(category)).pipe(
+      map((res: any) => res.data.listBlogsByCategory)
+    );
+  }
+
+  private async _getBlogsByCategory(category: string) {
+    return await this.getClient().graphql({
+      query: `
+        query($category: String!) {
+          listBlogsByCategory(category: $category) {
+            id
+            title
+            authorId
+            content
+            category
+            status
+            imageUrl
+            summary_ai
+            createdAt
+          }
+        }
+      `,
+      variables: { category },
+      authMode: 'userPool'
+    } as any);
+  }
+
   uploadFile(url: string, file: File) {
     return from(fetch(url, {
       method: 'PUT',
@@ -121,4 +149,4 @@ export class BlogService {
       }
     }));
   }
-}
+}

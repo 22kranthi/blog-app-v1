@@ -2,8 +2,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { getAllBlogs } from '../store/blog.selector';
-import { deleteBlog, loadBlogs } from '../store/blog.action';
+import { map } from 'rxjs/operators';
+import { getAllBlogs, getAllBlogsUnfiltered } from '../store/blog.selector';
+import { deleteBlog, loadBlogs, filterBlogsByCategory } from '../store/blog.action';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 
@@ -17,13 +18,28 @@ import { AuthService } from '../auth.service';
 export class BlogList implements OnInit {
   authService = inject(AuthService);
   blogList: Observable<any>;
+  categories$: Observable<string[]>;
 
   constructor(private store: Store, private router: Router) {
     this.blogList = this.store.select(getAllBlogs);
+    this.categories$ = this.store.select(getAllBlogsUnfiltered).pipe(
+      map(blogs => {
+        const cats = new Set(blogs.map((b: any) => b.category).filter(Boolean));
+        return Array.from(cats).sort();
+      })
+    );
   }
 
   ngOnInit() {
-    this.store.dispatch(loadBlogs());  // 🔥 moved here
+    this.store.dispatch(loadBlogs());
+  }
+
+  filterByCategory(category: string | null) {
+    if (category === null) {
+      this.store.dispatch(loadBlogs());
+    } else {
+      this.store.dispatch(filterBlogsByCategory({ category }));
+    }
   }
 
   edit(id: string) {

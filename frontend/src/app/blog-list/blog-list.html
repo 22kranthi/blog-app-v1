@@ -3,6 +3,13 @@
   <p>Read the latest articles below.</p>
 </div>
 
+<div class="filter-section" *ngIf="(categories$ | async) as categories">
+  <button class="filter-btn active" (click)="filterByCategory(null)">All</button>
+  <button *ngFor="let cat of categories" class="filter-btn" (click)="filterByCategory(cat)">
+    {{ cat }}
+  </button>
+</div>
+
 <ng-container *ngIf="blogList | async as blogs; else noBlogs">
   <div class="blog-grid" *ngIf="blogs.length > 0; else noBlogs">
     <div class="card" *ngFor="let blog of blogs; trackBy: trackById">
