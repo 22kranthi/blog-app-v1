@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  Serverless Java Full-Stack Blog Platform
+Description: 'Serverless Java Full-Stack Blog Platform - v1.0.1'
 
 Globals:
   Function:

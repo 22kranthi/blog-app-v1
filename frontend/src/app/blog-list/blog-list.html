@@ -37,9 +37,9 @@
             <span class="tag">{{ blog.category }}</span>
           </div>
 
-          <div *ngIf="blog.summary_ai" style="background: rgba(138,43,226,0.1); padding: 10px; border-radius: 8px; border-left: 4px solid #8a2be2; margin-bottom: 15px;">
-            <span style="font-size: 0.8rem; font-weight: bold; color: #8a2be2; text-transform: uppercase; letter-spacing: 1px;">✨ AI Summary</span>
-            <p style="margin: 5px 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);">{{ blog.summary_ai }}</p>
+          <div *ngIf="blog.summary_ai" class="ai-summary">
+            <span class="ai-label">✨ AI Summary</span>
+            <p class="ai-text">{{ blog.summary_ai }}</p>
           </div>
 
           <p class="description">{{ blog.content | slice:0:150 }}...</p>

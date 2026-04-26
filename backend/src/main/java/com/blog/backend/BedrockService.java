@@ -16,29 +16,26 @@ public class BedrockService {
 
     private final BedrockRuntimeClient bedrockClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    // Use Claude 3.5 Sonnet - likely available via cross-region inference or in major regions
-    private final String modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
+    // Use the US Inference Profile ID for Llama 3.1 8B (fixes the 'on-demand throughput' error)
+    private final String modelId = "us.meta.llama3-1-8b-instruct-v1:0";
 
     public BedrockService(BedrockRuntimeClient bedrockClient) {
         this.bedrockClient = bedrockClient;
     }
 
     public String generateSummary(String content) {
+        // Force deployment ID: 2026-04-26-v3-LLAMA
         try {
-            System.out.println("Generating AI summary for content length: " + content.length());
+            System.out.println("Generating AI summary using Llama 3.1 8B. Content length: " + content.length());
             
-            String prompt = "Please summarize the following blog content in exactly two sentences:\n\n" + content;
+            String prompt = "Summarize the following blog content in exactly two sentences. Output ONLY the two sentences. Do not include any preamble, steps, or 'Final Answer' text:\n\n" + content;
             
-            // Constructing a proper Claude 3 Messages API payload
-            Map<String, Object> message = new HashMap<>();
-            message.put("role", "user");
-            message.put("content", prompt);
-
+            // Constructing a Llama 3 specific payload
             Map<String, Object> payloadMap = new HashMap<>();
-            payloadMap.put("anthropic_version", "bedrock-2023-05-31");
-            payloadMap.put("max_tokens", 300);
-            payloadMap.put("messages", List.of(message));
+            payloadMap.put("prompt", prompt);
+            payloadMap.put("max_gen_len", 300);
             payloadMap.put("temperature", 0.5);
+            payloadMap.put("top_p", 0.9);
 
             String payload = objectMapper.writeValueAsString(payloadMap);
             
@@ -53,8 +50,8 @@ public class BedrockService {
             String responseBody = response.body().asUtf8String();
             
             JsonNode jsonNode = objectMapper.readTree(responseBody);
-            // Claude 3 Messages API response structure
-            return jsonNode.get("content").get(0).get("text").asText().trim();
+            // Llama 3 response structure uses 'generation'
+            return jsonNode.get("generation").asText().trim();
         } catch (Exception e) {
             System.err.println("Bedrock error: " + e.getMessage());
             e.printStackTrace();
