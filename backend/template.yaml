@@ -127,17 +127,20 @@ Resources:
         UserPoolId: !Ref BlogUserPool
         AwsRegion: !Ref AWS::Region
         DefaultAction: ALLOW
+      AdditionalAuthenticationProviders:
+        - AuthenticationType: API_KEY
 
   BlogAppSyncSchema:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt BlogAppSyncApi.ApiId
       Definition: |
-        type Blog {
+        type Blog @aws_api_key @aws_cognito_user_pools {
           id: ID!
           title: String!
           content: String!
           authorId: String!
+          authorName: String
           category: String!
           status: String!
           imageUrl: String
@@ -145,16 +148,23 @@ Resources:
           createdAt: String!
         }
         type Query {
-          getBlog(id: ID!): Blog
-          listBlogs: [Blog]
-          listBlogsByCategory(category: String!): [Blog]
+          getBlog(id: ID!): Blog @aws_api_key @aws_cognito_user_pools
+          listBlogs: [Blog] @aws_api_key @aws_cognito_user_pools
+          listBlogsByCategory(category: String!): [Blog] @aws_api_key @aws_cognito_user_pools
         }
         type Mutation {
-          createBlog(title: String!, content: String!, category: String!, imageUrl: String): Blog
-          updateBlog(id: ID!, title: String, content: String, category: String, status: String, imageUrl: String): Blog
-          deleteBlog(id: ID!): Boolean
-          getUploadUrl(filename: String!, contentType: String!): String
+          createBlog(title: String!, content: String!, category: String!, imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
+          updateBlog(id: ID!, title: String, content: String, category: String, status: String, imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
+          deleteBlog(id: ID!): Boolean @aws_cognito_user_pools
+          getUploadUrl(filename: String!, contentType: String!): String @aws_cognito_user_pools
         }
+
+  BlogAppSyncApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      Description: "API Key for guest access"
+      Expires: 1808654400 # April 2027
 
   # ---------------------------------------------------------
   # IAM Role for Lambda
@@ -301,6 +311,9 @@ Resources:
       DataSourceName: !GetAtt BlogLambdaDataSource.Name
 
 Outputs:
+  AppSyncApiKey:
+    Description: "GraphQL API Key"
+    Value: !GetAtt BlogAppSyncApiKey.ApiKey
   AppSyncApiUrl:
     Description: "GraphQL API URL"
     Value: !GetAtt BlogAppSyncApi.GraphQLUrl

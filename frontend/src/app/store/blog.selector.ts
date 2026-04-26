@@ -18,3 +18,8 @@ export const getSelectedCategory = createSelector(
   selectBlogState,
   (state: BlogState) => state.selectedCategory
 );
+
+export const getLoading = createSelector(
+  selectBlogState,
+  (state: BlogState) => state.loading
+);

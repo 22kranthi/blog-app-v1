@@ -14,7 +14,8 @@ export const awsConfig = {
     GraphQL: {
       endpoint: environment.aws.appSyncGraphqlEndpoint,
       region: environment.aws.region,
-      defaultAuthMode: 'userPool' as const
+      defaultAuthMode: 'userPool' as const,
+      apiKey: (environment.aws as any).apiKey
     }
   }
 };

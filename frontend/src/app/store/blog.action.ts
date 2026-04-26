@@ -9,9 +9,14 @@ export const loadBlogsSuccess = createAction(
   props<{ blogs: Blog[] }>()
 );
 
+export const loadBlogsFailure = createAction(
+  '[Blog] Load Blogs Failure',
+  props<{ error: any }>()
+);
+
 export const addBlog = createAction(
   '[Blog] Add Blog',
-  props<{ title: string; category: string; content: string; imageUrl?: string }>()
+  props<{ title: string; category: string; content: string; imageUrl?: string; authorName?: string }>()
 );
 
 export const addBlogSuccess = createAction(
@@ -21,7 +26,7 @@ export const addBlogSuccess = createAction(
 
 export const updateBlog = createAction(
   '[Blog] Update Blog',
-  props<{ id: string; title: string; category: string; content: string; imageUrl?: string; status?: string }>()
+  props<{ id: string; title: string; category: string; content: string; imageUrl?: string; status?: string; authorName?: string }>()
 );
 
 export const deleteBlog = createAction(

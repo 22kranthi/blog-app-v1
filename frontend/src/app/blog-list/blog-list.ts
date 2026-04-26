@@ -1,9 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { getAllBlogs, getAllBlogsUnfiltered } from '../store/blog.selector';
+import { Observable, combineLatest } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { map, take } from 'rxjs/operators';
+import { getAllBlogs, getAllBlogsUnfiltered, getLoading } from '../store/blog.selector';
 import { deleteBlog, loadBlogs, filterBlogsByCategory } from '../store/blog.action';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
@@ -16,12 +17,32 @@ import { AuthService } from '../auth.service';
   styleUrl: './blog-list.css'
 })
 export class BlogList implements OnInit {
+  @Input() mode: 'public' | 'my-blogs' | 'admin' = 'public';
+
   authService = inject(AuthService);
   blogList: Observable<any>;
   categories$: Observable<string[]>;
+  loading$: Observable<boolean>;
 
   constructor(private store: Store, private router: Router) {
-    this.blogList = this.store.select(getAllBlogs);
+    this.loading$ = this.store.select(getLoading);
+    
+    // Select blogs based on mode and react to user changes
+    this.blogList = combineLatest([
+      this.store.select(getAllBlogs),
+      this.store.select(getAllBlogsUnfiltered),
+      toObservable(this.authService.currentUserId)
+    ]).pipe(
+      map(([filtered, all, userId]) => {
+        const blogsToUse = this.mode === 'public' ? filtered : all;
+        
+        if (this.mode === 'my-blogs') {
+          return blogsToUse.filter((b: any) => b.authorId === userId);
+        }
+        return blogsToUse;
+      })
+    );
+
     this.categories$ = this.store.select(getAllBlogsUnfiltered).pipe(
       map(blogs => {
         const cats = new Set(blogs.map((b: any) => b.category).filter(Boolean));

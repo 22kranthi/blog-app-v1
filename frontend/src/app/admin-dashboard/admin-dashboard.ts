@@ -6,11 +6,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { getAllBlogs } from '../store/blog.selector';
 import { loadBlogs, deleteBlog } from '../store/blog.action';
+import { BlogList } from '../blog-list/blog-list';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, BlogList],
   template: `
     <div class="dashboard-container" style="padding: 2rem; max-width: 1000px; margin: 0 auto;">
       <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
@@ -31,33 +32,7 @@ import { loadBlogs, deleteBlog } from '../store/blog.action';
         </div>
 
         <h3 style="margin-bottom: 1rem;">All Published Content</h3>
-        <div style="background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-              <tr style="background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-color);">
-                <th style="padding: 1rem;">Title</th>
-                <th style="padding: 1rem;">Author ID</th>
-                <th style="padding: 1rem;">Date</th>
-                <th style="padding: 1rem;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (blog of (blogs$ | async); track blog.id) {
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                  <td style="padding: 1rem;">
-                    <strong>{{ blog.title }}</strong><br>
-                    <span style="font-size: 0.8rem; color: var(--text-secondary);">ID: {{ blog.id }}</span>
-                  </td>
-                  <td style="padding: 1rem;">{{ blog.authorId }}</td>
-                  <td style="padding: 1rem;">{{ blog.createdAt | date }}</td>
-                  <td style="padding: 1rem;">
-                    <button (click)="removeBlog(blog.id)" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Delete</button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+        <app-blog-list mode="admin"></app-blog-list>
       }
     </div>
   `

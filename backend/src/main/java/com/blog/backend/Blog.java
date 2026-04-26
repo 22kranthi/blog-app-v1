@@ -9,6 +9,7 @@ public class Blog {
     private String status;
     private String imageUrl;
     private String summary_ai;
+    private String authorName;
     private String createdAt;
 
     // Getters and Setters
@@ -23,6 +24,9 @@ public class Blog {
 
     public String getAuthorId() { return authorId; }
     public void setAuthorId(String authorId) { this.authorId = authorId; }
+
+    public String getAuthorName() { return authorName; }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

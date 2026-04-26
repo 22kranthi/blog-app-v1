@@ -127,7 +127,8 @@ export class BlogForm implements OnInit, OnDestroy {
           title: this.title,
           category: this.category,
           content: this.content,
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
+          authorName: this.authService.userDisplayName() || undefined
         }));
 
       } else {
@@ -140,7 +141,8 @@ export class BlogForm implements OnInit, OnDestroy {
           title: this.title,
           category: this.category,
           content: this.content,
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
+          authorName: this.authService.userDisplayName() || undefined
         }));
       }
     } catch (error) {

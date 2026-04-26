@@ -14,6 +14,26 @@ export class App implements OnInit {
   authService = inject(AuthService);
   protected readonly title = signal('blog-app');
 
+  formFields = {
+    signUp: {
+      nickname: {
+        label: 'Display Name (Author Name)',
+        placeholder: 'Enter your display name',
+        required: true,
+        order: 1
+      },
+      email: {
+        order: 2
+      },
+      password: {
+        order: 3
+      },
+      confirm_password: {
+        order: 4
+      }
+    }
+  };
+
   ngOnInit() {
     this.authService.checkAuthStatus();
   }

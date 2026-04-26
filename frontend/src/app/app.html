@@ -4,6 +4,9 @@
   </div>
   <div class="nav-links">
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Home</a>
+    @if (authService.isAuthenticated()) {
+      <a routerLink="/my-blogs" routerLinkActive="active" class="nav-link">My Blogs</a>
+    }
     <a routerLink="/add" routerLinkActive="active" class="nav-link">Add Blog</a>
     @if (authService.isAdmin()) {
       <a routerLink="/admin" routerLinkActive="active" class="nav-link" style="color: #8a2be2;">Dashboard</a>
@@ -29,6 +32,6 @@
 <div class="modal-overlay" [class.modal-visible]="authService.showLoginModal()" (click)="authService.closeLogin()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <button class="close-btn" (click)="authService.closeLogin()">×</button>
-    <amplify-authenticator></amplify-authenticator>
+    <amplify-authenticator [formFields]="formFields"></amplify-authenticator>
   </div>
 </div>

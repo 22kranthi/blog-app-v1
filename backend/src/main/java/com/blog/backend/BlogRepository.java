@@ -27,6 +27,9 @@ public class BlogRepository {
         item.put("title", AttributeValue.builder().s(blog.getTitle()).build());
         item.put("content", AttributeValue.builder().s(blog.getContent()).build());
         item.put("authorId", AttributeValue.builder().s(blog.getAuthorId()).build());
+        if (blog.getAuthorName() != null) {
+            item.put("authorName", AttributeValue.builder().s(blog.getAuthorName()).build());
+        }
         item.put("category", AttributeValue.builder().s(blog.getCategory()).build());
         item.put("status", AttributeValue.builder().s(blog.getStatus()).build());
         item.put("createdAt", AttributeValue.builder().s(blog.getCreatedAt()).build());
@@ -120,6 +123,7 @@ public class BlogRepository {
         if (item.containsKey("title")) blog.setTitle(item.get("title").s());
         if (item.containsKey("content")) blog.setContent(item.get("content").s());
         if (item.containsKey("authorId")) blog.setAuthorId(item.get("authorId").s());
+        if (item.containsKey("authorName")) blog.setAuthorName(item.get("authorName").s());
         if (item.containsKey("category")) blog.setCategory(item.get("category").s());
         if (item.containsKey("status")) blog.setStatus(item.get("status").s());
         if (item.containsKey("createdAt")) blog.setCreatedAt(item.get("createdAt").s());

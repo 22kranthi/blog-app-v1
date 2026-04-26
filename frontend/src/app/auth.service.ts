@@ -10,6 +10,7 @@ export class AuthService {
   isAdmin = signal<boolean>(false);
   isAuthenticated = signal<boolean>(false);
   currentUserId = signal<string | null>(null);
+  userDisplayName = signal<string | null>(null);
   showLoginModal = signal<boolean>(false);
 
   router = inject(Router);
@@ -23,6 +24,7 @@ export class AuthService {
         this.isAuthenticated.set(false);
         this.isAdmin.set(false);
         this.currentUserId.set(null);
+        this.userDisplayName.set(null);
       }
     });
   }
@@ -36,10 +38,25 @@ export class AuthService {
       
       const groups = session.tokens?.accessToken?.payload['cognito:groups'] as string[];
       this.isAdmin.set(groups?.includes('ADMIN') || false);
+
+      // Fetch user attributes for display name
+      const attributes = (await session.tokens?.idToken?.payload) as any;
+      const nickname = attributes['nickname'];
+      const email = attributes['email'];
+      
+      if (nickname) {
+        this.userDisplayName.set(nickname);
+      } else if (email) {
+        this.userDisplayName.set(email.split('@')[0]); // Fallback to email prefix
+      } else {
+        this.userDisplayName.set(user.username);
+      }
+
     } catch (e) {
       this.isAuthenticated.set(false);
       this.isAdmin.set(false);
       this.currentUserId.set(null);
+      this.userDisplayName.set(null);
     }
   }
 

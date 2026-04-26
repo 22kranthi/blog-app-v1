@@ -1,12 +1,19 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { from, map } from 'rxjs';
 import { generateClient } from 'aws-amplify/api';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class BlogService {
 
+  private authService = inject(AuthService);
+
   private getClient() {
     return generateClient();
+  }
+
+  private getAuthMode(): any {
+    return this.authService.isAuthenticated() ? 'userPool' : 'apiKey';
   }
 
   getBlogs() {
@@ -23,6 +30,7 @@ export class BlogService {
             id
             title
             authorId
+            authorName
             content
             category
             status
@@ -32,7 +40,7 @@ export class BlogService {
           }
         }
       `,
-      authMode: 'userPool'
+      authMode: this.getAuthMode()
     } as any);
   }
 
@@ -45,9 +53,9 @@ export class BlogService {
   private async _createBlog(blog: any) {
     return await this.getClient().graphql({
       query: `
-        mutation($title: String!, $content: String!, $category: String!, $imageUrl: String) {
-          createBlog(title: $title, content: $content, category: $category, imageUrl: $imageUrl) {
-            id title authorId content category status imageUrl summary_ai createdAt
+        mutation($title: String!, $content: String!, $category: String!, $imageUrl: String, $authorName: String) {
+          createBlog(title: $title, content: $content, category: $category, imageUrl: $imageUrl, authorName: $authorName) {
+            id title authorId authorName content category status imageUrl summary_ai createdAt
           }
         }
       `,
@@ -65,9 +73,9 @@ export class BlogService {
   private async _updateBlog(blog: any) {
     return await this.getClient().graphql({
       query: `
-        mutation($id: ID!, $title: String, $content: String, $category: String, $status: String, $imageUrl: String) {
-          updateBlog(id: $id, title: $title, content: $content, category: $category, status: $status, imageUrl: $imageUrl) {
-            id title authorId content category status imageUrl summary_ai createdAt
+        mutation($id: ID!, $title: String, $content: String, $category: String, $status: String, $imageUrl: String, $authorName: String) {
+          updateBlog(id: $id, title: $title, content: $content, category: $category, status: $status, imageUrl: $imageUrl, authorName: $authorName) {
+            id title authorId authorName content category status imageUrl summary_ai createdAt
           }
         }
       `,
@@ -126,6 +134,7 @@ export class BlogService {
             id
             title
             authorId
+            authorName
             content
             category
             status
@@ -136,7 +145,36 @@ export class BlogService {
         }
       `,
       variables: { category },
-      authMode: 'userPool'
+      authMode: this.getAuthMode()
+    } as any);
+  }
+
+  getBlog(id: string) {
+    return from(this._getBlog(id)).pipe(
+      map((res: any) => res.data.getBlog)
+    );
+  }
+
+  private async _getBlog(id: string) {
+    return await this.getClient().graphql({
+      query: `
+        query($id: ID!) {
+          getBlog(id: $id) {
+            id
+            title
+            authorId
+            authorName
+            content
+            category
+            status
+            imageUrl
+            summary_ai
+            createdAt
+          }
+        }
+      `,
+      variables: { id },
+      authMode: this.getAuthMode()
     } as any);
   }
 

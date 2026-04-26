@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { BlogService } from '../blog.service';
-import { loadBlogs, loadBlogsSuccess, addBlog, addBlogSuccess, deleteBlog, updateBlog, filterBlogsByCategory, filterBlogsByCategorySuccess } from './blog.action';
+import { loadBlogs, loadBlogsSuccess, loadBlogsFailure, addBlog, addBlogSuccess, deleteBlog, updateBlog, filterBlogsByCategory, filterBlogsByCategorySuccess } from './blog.action';
 import { switchMap, map, catchError } from 'rxjs';
 import { of } from 'rxjs';
 
@@ -17,9 +17,9 @@ export class BlogEffects {
       switchMap(() =>
         this.blogService.getBlogs().pipe(
           map(blogs => loadBlogsSuccess({ blogs: blogs || [] })),
-          catchError(err => {
-            console.error('Failed to load blogs:', err);
-            return of(loadBlogsSuccess({ blogs: [] }));
+          catchError(error => {
+            console.error('Failed to load blogs:', error);
+            return of(loadBlogsFailure({ error }));
           })
         )
       )
@@ -29,8 +29,8 @@ export class BlogEffects {
   addBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(addBlog),
-      switchMap(({ title, category, content, imageUrl }) =>
-        this.blogService.createBlog({ title, category, content, imageUrl }).pipe(
+      switchMap(({ title, category, content, imageUrl, authorName }) =>
+        this.blogService.createBlog({ title, category, content, imageUrl, authorName }).pipe(
           map(blog => addBlogSuccess({ blog })),
           catchError(err => {
             console.error('Failed to create blog:', err);
@@ -45,8 +45,8 @@ export class BlogEffects {
   updateBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(updateBlog),
-      switchMap(({ id, title, category, content, imageUrl, status }) =>
-        this.blogService.updateBlog({ id, title, category, content, imageUrl, status }).pipe(
+      switchMap(({ id, title, category, content, imageUrl, status, authorName }) =>
+        this.blogService.updateBlog({ id, title, category, content, imageUrl, status, authorName }).pipe(
           map(() => loadBlogs()),
           catchError(err => {
             console.error('Failed to update blog:', err);
