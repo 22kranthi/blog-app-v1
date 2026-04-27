@@ -31,6 +31,8 @@ Resources:
           AttributeType: S
         - AttributeName: category
           AttributeType: S
+        - AttributeName: status
+          AttributeType: S
         - AttributeName: createdAt
           AttributeType: S
       KeySchema:
@@ -46,6 +48,14 @@ Resources:
         - IndexName: CategoryIndex
           KeySchema:
             - AttributeName: category
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
               KeyType: HASH
             - AttributeName: createdAt
               KeyType: RANGE

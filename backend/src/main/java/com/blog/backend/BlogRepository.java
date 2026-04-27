@@ -67,34 +67,57 @@ public class BlogRepository {
     }
 
     public PaginatedResult listBlogs(Integer limit, String nextToken) {
-        logger.info("Scanning blogs with limit: {} and nextToken: {}", limit, nextToken);
+        logger.info("Querying blogs from StatusIndex with limit: {} and nextToken: {}", limit, nextToken);
         
-        ScanRequest.Builder builder = ScanRequest.builder()
-                .tableName(tableName);
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        expressionAttributeNames.put("#s", "status");
+
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":status", AttributeValue.builder().s("PUBLISHED").build());
+
+        QueryRequest.Builder builder = QueryRequest.builder()
+                .tableName(tableName)
+                .indexName("StatusIndex")
+                .keyConditionExpression("#s = :status")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .scanIndexForward(false); // Newest first
 
         if (limit != null && limit > 0) {
             builder.limit(limit);
         }
 
         if (nextToken != null && !nextToken.isEmpty()) {
-            // Simple Base64 or JSON could be used, but for a simple PK/SK, we just use the ID
-            Map<String, AttributeValue> startKey = new HashMap<>();
-            startKey.put("PK", AttributeValue.builder().s("BLOG#" + nextToken).build());
-            startKey.put("SK", AttributeValue.builder().s("METADATA").build());
-            builder.exclusiveStartKey(startKey);
+            // In a GSI query, the ExclusiveStartKey must contain the Index keys + the Table keys
+            // Format: "status|createdAt|id" (simplified for this example)
+            try {
+                String[] parts = nextToken.split("\\|");
+                if (parts.length >= 3) {
+                    Map<String, AttributeValue> startKey = new HashMap<>();
+                    startKey.put("status", AttributeValue.builder().s("PUBLISHED").build());
+                    startKey.put("createdAt", AttributeValue.builder().s(parts[1]).build());
+                    startKey.put("PK", AttributeValue.builder().s("BLOG#" + parts[2]).build());
+                    startKey.put("SK", AttributeValue.builder().s("METADATA").build());
+                    builder.exclusiveStartKey(startKey);
+                }
+            } catch (Exception e) {
+                logger.error("Error parsing nextToken: {}", nextToken);
+            }
         }
 
-        ScanResponse response = dynamoDbClient.scan(builder.build());
+        QueryResponse response = dynamoDbClient.query(builder.build());
         List<Blog> blogs = new ArrayList<>();
         for (Map<String, AttributeValue> item : response.items()) {
             blogs.add(mapToBlog(item));
         }
 
         String newNextToken = null;
-        if (response.hasLastEvaluatedKey() && response.lastEvaluatedKey().containsKey("PK")) {
-            // Extract the ID from "BLOG#<id>"
-            String pk = response.lastEvaluatedKey().get("PK").s();
-            newNextToken = pk.replace("BLOG#", "");
+        if (response.hasLastEvaluatedKey()) {
+            Map<String, AttributeValue> lek = response.lastEvaluatedKey();
+            // Create a compound token for the next page
+            String createdAt = lek.get("createdAt").s();
+            String id = lek.get("PK").s().replace("BLOG#", "");
+            newNextToken = "PUBLISHED|" + createdAt + "|" + id;
         }
 
         return new PaginatedResult(blogs, newNextToken);
