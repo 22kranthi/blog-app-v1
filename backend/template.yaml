@@ -38,6 +38,10 @@ Resources:
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
       GlobalSecondaryIndexes:
         - IndexName: CategoryIndex
           KeySchema:
@@ -59,6 +63,10 @@ Resources:
         BlockPublicPolicy: false
         IgnorePublicAcls: false
         RestrictPublicBuckets: false
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -146,9 +154,13 @@ Resources:
           summary_ai: String
           createdAt: String!
         }
+        type BlogConnection @aws_api_key @aws_cognito_user_pools {
+          items: [Blog]
+          nextToken: String
+        }
         type Query {
           getBlog(id: ID!): Blog @aws_api_key @aws_cognito_user_pools
-          listBlogs: [Blog] @aws_api_key @aws_cognito_user_pools
+          listBlogs(limit: Int, nextToken: String): BlogConnection @aws_api_key @aws_cognito_user_pools
           listBlogsByCategory(category: String!): [Blog] @aws_api_key @aws_cognito_user_pools
         }
         type Mutation {
@@ -201,6 +213,7 @@ Resources:
                 Action:
                   - s3:PutObject
                   - s3:GetObject
+                  - s3:DeleteObject
                 Resource: !Sub "${BlogImageBucket.Arn}/*"
               - Effect: Allow
                 Action:

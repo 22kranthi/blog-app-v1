@@ -6,12 +6,11 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { getAllBlogs } from '../store/blog.selector';
 import { loadBlogs, deleteBlog } from '../store/blog.action';
-import { BlogList } from '../blog-list/blog-list';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, BlogList],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="dashboard-container" style="padding: 2rem; max-width: 1000px; margin: 0 auto;">
       <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">

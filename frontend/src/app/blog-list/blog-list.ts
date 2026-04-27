@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable, combineLatest } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { map, take } from 'rxjs/operators';
-import { getAllBlogs, getAllBlogsUnfiltered, getLoading } from '../store/blog.selector';
-import { deleteBlog, loadBlogs, filterBlogsByCategory } from '../store/blog.action';
+import { map } from 'rxjs/operators';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 import { Blog } from '../model/blog.model';
+import { getAllBlogs, getAllBlogsUnfiltered, getLoading, getNextToken } from '../store/blog.selector';
+import { deleteBlog, loadBlogs, filterBlogsByCategory, loadMoreBlogs } from '../store/blog.action';
 
 @Component({
   selector: 'app-blog-list',
@@ -25,9 +25,11 @@ export class BlogList implements OnInit {
   blogList: Observable<Blog[]>;
   categories$: Observable<string[]>;
   loading$: Observable<boolean>;
+  nextToken$: Observable<string | null>;
 
   constructor(private store: Store, private router: Router) {
     this.loading$ = this.store.select(getLoading);
+    this.nextToken$ = this.store.select(getNextToken);
     
     // Select blogs based on mode and react to user changes
     this.blogList = combineLatest([
@@ -73,6 +75,10 @@ export class BlogList implements OnInit {
     } else {
       this.store.dispatch(filterBlogsByCategory({ category }));
     }
+  }
+
+  loadMore() {
+    this.store.dispatch(loadMoreBlogs({ limit: 5 }));
   }
 
   edit(id: string) {

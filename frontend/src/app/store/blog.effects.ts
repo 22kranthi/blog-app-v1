@@ -1,24 +1,45 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
 import { BlogService } from '../blog.service';
-import { loadBlogs, loadBlogsSuccess, loadBlogsFailure, addBlog, addBlogSuccess, deleteBlog, updateBlog, filterBlogsByCategory, filterBlogsByCategorySuccess } from './blog.action';
-import { switchMap, map, catchError } from 'rxjs';
+import { loadBlogs, loadBlogsSuccess, loadBlogsFailure, addBlog, addBlogSuccess, deleteBlog, updateBlog, filterBlogsByCategory, filterBlogsByCategorySuccess, loadMoreBlogs, loadMoreBlogsSuccess } from './blog.action';
+import { switchMap, map, catchError, withLatestFrom } from 'rxjs';
 import { of } from 'rxjs';
+import { NotificationService } from '../notification.service';
+import { getNextToken } from './blog.selector';
 
 @Injectable()
 export class BlogEffects {
 
   private actions$ = inject(Actions);
   private blogService = inject(BlogService);
+  private store = inject(Store);
+  private notification = inject(NotificationService);
   
   loadBlogs$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loadBlogs),
       switchMap(() =>
-        this.blogService.getBlogs().pipe(
-          map(blogs => loadBlogsSuccess({ blogs: blogs || [] })),
+        this.blogService.getBlogs(5).pipe(
+          map(connection => loadBlogsSuccess({ connection })),
           catchError(error => {
-            console.error('Failed to load blogs:', error);
+            this.notification.error('Failed to load blogs. Please check your connection.');
+            return of(loadBlogsFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  loadMoreBlogs$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(loadMoreBlogs),
+      withLatestFrom(this.store.select(getNextToken)),
+      switchMap(([{ limit }, nextToken]) =>
+        this.blogService.getBlogs(limit || 5, nextToken).pipe(
+          map(connection => loadMoreBlogsSuccess({ connection })),
+          catchError(error => {
+            this.notification.error('Failed to load more blogs.');
             return of(loadBlogsFailure({ error }));
           })
         )
@@ -31,10 +52,12 @@ export class BlogEffects {
       ofType(addBlog),
       switchMap(({ title, category, content, imageUrl, authorName }) =>
         this.blogService.createBlog({ title, category, content, imageUrl, authorName }).pipe(
-          map(blog => addBlogSuccess({ blog })),
+          map(blog => {
+            this.notification.success('Blog published successfully! ✨');
+            return addBlogSuccess({ blog });
+          }),
           catchError(err => {
-            console.error('Failed to create blog:', err);
-            alert('Failed to create blog. Please try again.');
+            this.notification.error('Failed to publish blog. Please try again.');
             return of({ type: '[Blog] Add Blog Failure' });
           })
         )
@@ -47,10 +70,12 @@ export class BlogEffects {
       ofType(updateBlog),
       switchMap(({ id, title, category, content, imageUrl, status, authorName }) =>
         this.blogService.updateBlog({ id, title, category, content, imageUrl, status, authorName }).pipe(
-          map(() => loadBlogs()),
+          map(() => {
+            this.notification.success('Blog updated successfully!');
+            return loadBlogs();
+          }),
           catchError(err => {
-            console.error('Failed to update blog:', err);
-            alert('Failed to update blog. Please try again.');
+            this.notification.error('Failed to update blog.');
             return of({ type: '[Blog] Update Blog Failure' });
           })
         )
@@ -63,10 +88,12 @@ export class BlogEffects {
       ofType(deleteBlog),
       switchMap(action =>
         this.blogService.deleteBlog(action.id).pipe(
-          map(() => loadBlogs()),
+          map(() => {
+            this.notification.success('Blog deleted.');
+            return loadBlogs();
+          }),
           catchError(err => {
-            console.error('Failed to delete blog:', err);
-            alert('Failed to delete blog. Please try again.');
+            this.notification.error('Failed to delete blog.');
             return of({ type: '[Blog] Delete Blog Failure' });
           })
         )

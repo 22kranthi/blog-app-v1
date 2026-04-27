@@ -1,5 +1,7 @@
 package com.blog.backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +12,7 @@ import java.util.function.Function;
 @Configuration
 public class BlogFunctionConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(BlogFunctionConfig.class);
     private final BlogRepository blogRepository;
     private final BedrockService bedrockService;
     private final S3Service s3Service;
@@ -27,7 +30,7 @@ public class BlogFunctionConfig {
             String parentTypeName = event.getInfo().getParentTypeName();
             Map<String, Object> arguments = event.getArguments();
 
-            System.out.println("Processing GraphQL Request: " + parentTypeName + "." + fieldName);
+            logger.info("Processing GraphQL Request: {}.{}", parentTypeName, fieldName);
 
             if ("Mutation".equals(parentTypeName)) {
                 switch (fieldName) {
@@ -45,7 +48,7 @@ public class BlogFunctionConfig {
             } else if ("Query".equals(parentTypeName)) {
                 switch (fieldName) {
                     case "listBlogs":
-                        return listBlogs();
+                        return listBlogs(arguments);
                     case "getBlog":
                         return getBlogQuery(arguments);
                     case "listBlogsByCategory":
@@ -85,27 +88,34 @@ public class BlogFunctionConfig {
         
         String username = identity != null && identity.getUsername() != null ? identity.getUsername() : "";
         if (!isAdmin(identity) && !username.equals(existing.getAuthorId())) {
+            logger.warn("Delete unauthorized for user: {}", username);
             throw new RuntimeException("Unauthorized: You do not have permission to delete this blog");
         }
         
+        // Clean up S3 image if it exists
+        if (existing.getImageUrl() != null) {
+            logger.info("Cleaning up S3 image for deleted blog: {}", existing.getImageUrl());
+            s3Service.deleteFileFromUrl(existing.getImageUrl());
+        }
+        
         blogRepository.deleteBlog(id);
-        System.out.println("Deleted blog with ID: " + id);
+        logger.info("Deleted blog with ID: {}", id);
         return true;
     }
 
     private Blog updateBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
         String id = (String) args.get("id");
-        System.out.println("Updating blog ID: " + id + " for user: " + (identity != null ? identity.getUsername() : "unknown"));
+        String username = identity != null && identity.getUsername() != null ? identity.getUsername() : "unknown";
+        logger.info("Updating blog ID: {} for user: {}", id, username);
         
         Blog existing = blogRepository.getBlog(id);
         if (existing == null) {
-            System.err.println("Update failed: Blog not found with ID " + id);
+            logger.error("Update failed: Blog not found with ID {}", id);
             throw new RuntimeException("Blog not found");
         }
         
-        String username = identity != null && identity.getUsername() != null ? identity.getUsername() : "";
         if (!isAdmin(identity) && !username.equals(existing.getAuthorId())) {
-            System.err.println("Update unauthorized for user: " + username);
+            logger.warn("Update unauthorized for user: {}", username);
             throw new RuntimeException("Unauthorized: You do not have permission to edit this blog");
         }
 
@@ -119,17 +129,26 @@ public class BlogFunctionConfig {
         if (title != null) existing.setTitle(title);
         if (content != null) {
             existing.setContent(content);
-            System.out.println("Regenerating AI summary for updated content...");
+            logger.info("Regenerating AI summary for updated content...");
             String newSummary = bedrockService.generateSummary(content);
             existing.setSummary_ai(newSummary);
         }
         if (category != null) existing.setCategory(category);
         if (status != null) existing.setStatus(status);
-        if (imageUrl != null) existing.setImageUrl(imageUrl);
+        
+        if (imageUrl != null) {
+            // If the image is being changed, delete the old one from S3
+            if (existing.getImageUrl() != null && !existing.getImageUrl().equals(imageUrl)) {
+                logger.info("Deleting old S3 image: {}", existing.getImageUrl());
+                s3Service.deleteFileFromUrl(existing.getImageUrl());
+            }
+            existing.setImageUrl(imageUrl);
+        }
+        
         if (authorName != null) existing.setAuthorName(authorName);
 
         blogRepository.updateBlog(existing);
-        System.out.println("Successfully updated blog ID: " + id);
+        logger.info("Successfully updated blog ID: {}", id);
         return existing;
     }
 
@@ -142,10 +161,10 @@ public class BlogFunctionConfig {
         String authorId = identity != null && identity.getUsername() != null ? identity.getUsername() : "anonymous";
         String authorName = (authorNameArg != null) ? authorNameArg : authorId;
 
-        System.out.println("Creating new blog. Title: " + title + ", Author: " + authorId);
+        logger.info("Creating new blog. Title: {}, Author: {}", title, authorId);
 
         // Call Bedrock for AI Summary
-        System.out.println("Requesting AI summary from Bedrock...");
+        logger.info("Requesting AI summary from Bedrock...");
         String aiSummary = bedrockService.generateSummary(content);
 
         Blog blog = new Blog();
@@ -160,11 +179,11 @@ public class BlogFunctionConfig {
         blog.setSummary_ai(aiSummary);
         blog.setCreatedAt(java.time.Instant.now().toString());
 
-        System.out.println("Saving new blog to DynamoDB Table...");
+        logger.info("Saving new blog to DynamoDB...");
         // Persist to DynamoDB
         blogRepository.saveBlog(blog);
 
-        System.out.println("Successfully created blog with ID: " + blog.getId());
+        logger.info("Successfully created blog with ID: {}", blog.getId());
         return blog;
     }
 
@@ -177,8 +196,10 @@ public class BlogFunctionConfig {
         return s3Service.generatePresignedUrl(filename, contentType, identity.getUsername());
     }
 
-    private java.util.List<Blog> listBlogs() {
-        return blogRepository.listBlogs();
+    private BlogRepository.PaginatedResult listBlogs(Map<String, Object> args) {
+        Integer limit = (Integer) args.get("limit");
+        String nextToken = (String) args.get("nextToken");
+        return blogRepository.listBlogs(limit, nextToken);
     }
 
     private Blog getBlogQuery(Map<String, Object> args) {

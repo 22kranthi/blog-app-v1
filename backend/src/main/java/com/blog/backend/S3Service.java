@@ -1,6 +1,8 @@
 package com.blog.backend;
 
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -15,10 +17,34 @@ public class S3Service {
     private static final int MAX_FILENAME_LENGTH = 200;
 
     private final S3Presigner s3Presigner;
+    private final S3Client s3Client;
     private final String bucketName = System.getenv().getOrDefault("S3_BUCKET_NAME", "BlogImageBucket");
 
-    public S3Service(S3Presigner s3Presigner) {
+    public S3Service(S3Presigner s3Presigner, S3Client s3Client) {
         this.s3Presigner = s3Presigner;
+        this.s3Client = s3Client;
+    }
+
+    public void deleteFileFromUrl(String imageUrl) {
+        if (imageUrl == null || !imageUrl.contains(bucketName)) {
+            return;
+        }
+
+        try {
+            // Extract key from URL (everything after the bucket name)
+            // Example: https://bucket.s3.region.amazonaws.com/uploads/user/file.jpg
+            String key = imageUrl.substring(imageUrl.indexOf(".com/") + 5);
+            
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
+            
+            s3Client.deleteObject(deleteRequest);
+        } catch (Exception e) {
+            // Log but don't fail the blog deletion if S3 deletion fails
+            System.err.println("Failed to delete S3 object: " + imageUrl);
+        }
     }
 
     public String generatePresignedUrl(String filename, String contentType, String userId) {

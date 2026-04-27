@@ -17,8 +17,13 @@ export interface GraphQLResponse<T> {
   errors?: any[];
 }
 
+export interface BlogConnection {
+  items: Blog[];
+  nextToken: string | null;
+}
+
 export interface ListBlogsResponse {
-  listBlogs: Blog[];
+  listBlogs: BlogConnection;
 }
 
 export interface ListBlogsByCategoryResponse {

@@ -1,11 +1,12 @@
 import { Blog } from "../model/blog.model";
-import { addBlog, addBlogSuccess, deleteBlog, loadBlogs, loadBlogsSuccess, loadBlogsFailure, updateBlog, filterBlogsByCategorySuccess } from "./blog.action";
+import { addBlog, addBlogSuccess, deleteBlog, loadBlogs, loadBlogsSuccess, loadBlogsFailure, updateBlog, filterBlogsByCategorySuccess, loadMoreBlogs, loadMoreBlogsSuccess } from "./blog.action";
 import { createReducer, on } from "@ngrx/store";
 
 export interface BlogState {
   allBlogs: Blog[];
   filteredBlogs: Blog[];
   selectedCategory: string | null;
+  nextToken: string | null;
   loading: boolean;
 }
 
@@ -13,6 +14,7 @@ export const initialState: BlogState = {
   allBlogs: [],
   filteredBlogs: [],
   selectedCategory: null,
+  nextToken: null,
   loading: false
 };
 
@@ -24,11 +26,27 @@ export const blogReducer = createReducer(
     loading: true
   })),
 
-  on(loadBlogsSuccess, (state, { blogs }) => ({
+  on(loadBlogsSuccess, (state, { connection }) => ({
     ...state,
-    allBlogs: blogs,
-    filteredBlogs: blogs,
+    allBlogs: connection.items,
+    filteredBlogs: connection.items,
+    nextToken: connection.nextToken,
     selectedCategory: null,
+    loading: false
+  })),
+
+  on(loadMoreBlogs, (state) => ({
+    ...state,
+    loading: true
+  })),
+
+  on(loadMoreBlogsSuccess, (state, { connection }) => ({
+    ...state,
+    allBlogs: [...state.allBlogs, ...connection.items],
+    filteredBlogs: state.selectedCategory === null 
+      ? [...state.filteredBlogs, ...connection.items] 
+      : state.filteredBlogs,
+    nextToken: connection.nextToken,
     loading: false
   })),
 

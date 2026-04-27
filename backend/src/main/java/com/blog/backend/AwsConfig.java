@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
@@ -22,6 +23,14 @@ public class AwsConfig {
     public BedrockRuntimeClient bedrockRuntimeClient() {
         String region = System.getenv().getOrDefault("BEDROCK_REGION", "us-east-1");
         return BedrockRuntimeClient.builder()
+                .region(Region.of(region))
+                .build();
+    }
+
+    @Bean
+    public S3Client s3Client() {
+        String region = System.getenv().getOrDefault("AWS_REGION", "ap-south-2");
+        return S3Client.builder()
                 .region(Region.of(region))
                 .build();
     }

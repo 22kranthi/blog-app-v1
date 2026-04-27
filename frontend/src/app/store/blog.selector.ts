@@ -23,3 +23,8 @@ export const getLoading = createSelector(
   selectBlogState,
   (state: BlogState) => state.loading
 );
+
+export const getNextToken = createSelector(
+  selectBlogState,
+  (state: BlogState) => state.nextToken
+);

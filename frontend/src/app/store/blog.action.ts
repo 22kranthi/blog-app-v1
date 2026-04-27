@@ -1,17 +1,27 @@
 import { createAction, props } from "@ngrx/store";
-import { Blog } from  "../model/blog.model";
+import { Blog, BlogConnection } from  "../model/blog.model";
 
 
 export const loadBlogs = createAction('[Blog] Load Blogs');
 
 export const loadBlogsSuccess = createAction(
   '[Blog] Load Blogs Success',
-  props<{ blogs: Blog[] }>()
+  props<{ connection: BlogConnection }>()
 );
 
 export const loadBlogsFailure = createAction(
   '[Blog] Load Blogs Failure',
   props<{ error: any }>()
+);
+
+export const loadMoreBlogs = createAction(
+  '[Blog] Load More Blogs',
+  props<{ limit?: number }>()
+);
+
+export const loadMoreBlogsSuccess = createAction(
+  '[Blog] Load More Blogs Success',
+  props<{ connection: BlogConnection }>()
 );
 
 export const addBlog = createAction(

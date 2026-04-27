@@ -5,6 +5,7 @@ import { BlogDetail } from './blog-detail/blog-detail';
 import { AdminDashboard } from './admin-dashboard/admin-dashboard';
 import { MyBlogs } from './my-blogs/my-blogs';
 import { authGuard, adminGuard } from './auth.guard';
+import { NotFoundComponent } from './not-found.component';
 
 export const routes: Routes = [
   { path: '', component: BlogList },
@@ -13,5 +14,5 @@ export const routes: Routes = [
   { path: 'edit/:id', component: BlogForm, canActivate: [authGuard] },
   { path: 'blog/:id', component: BlogDetail },
   { path: 'admin', component: AdminDashboard, canActivate: [adminGuard] },
-  { path: '**', redirectTo: '' }
+  { path: '**', component: NotFoundComponent }
 ];

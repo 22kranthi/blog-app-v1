@@ -67,6 +67,18 @@
         </div>
       }
     </div>
+    
+    @if (nextToken$ | async) {
+      <div class="load-more-container">
+        <button (click)="loadMore()" class="load-more-btn" [disabled]="loading$ | async">
+          @if (loading$ | async) {
+            <span class="spinner"></span> Loading...
+          } @else {
+            Load More Articles
+          }
+        </button>
+      </div>
+    }
   }
 
 </ng-container>

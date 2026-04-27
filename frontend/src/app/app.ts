@@ -3,10 +3,12 @@ import { RouterOutlet, RouterModule } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
 
+import { NotificationComponent } from './notification.component';
+
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, AmplifyAuthenticatorModule],
+  imports: [RouterOutlet, RouterModule, AmplifyAuthenticatorModule, NotificationComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

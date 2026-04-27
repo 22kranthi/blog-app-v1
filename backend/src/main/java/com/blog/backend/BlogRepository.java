@@ -1,5 +1,7 @@
 package com.blog.backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -12,6 +14,7 @@ import java.util.Map;
 @Repository
 public class BlogRepository {
 
+    private static final Logger logger = LoggerFactory.getLogger(BlogRepository.class);
     private final DynamoDbClient dynamoDbClient;
     private final String tableName = System.getenv().getOrDefault("BLOG_TABLE_NAME", "BlogTable");
 
@@ -20,6 +23,7 @@ public class BlogRepository {
     }
 
     public void saveBlog(Blog blog) {
+        logger.info("Saving new blog: {}", blog.getId());
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("PK", AttributeValue.builder().s("BLOG#" + blog.getId()).build());
         item.put("SK", AttributeValue.builder().s("METADATA").build());
@@ -49,20 +53,55 @@ public class BlogRepository {
         dynamoDbClient.putItem(request);
     }
 
-    public List<Blog> listBlogs() {
-        ScanRequest scanRequest = ScanRequest.builder()
-                .tableName(tableName)
-                .build();
+    public static class PaginatedResult {
+        private final List<Blog> items;
+        private final String nextToken;
 
-        ScanResponse response = dynamoDbClient.scan(scanRequest);
+        public PaginatedResult(List<Blog> items, String nextToken) {
+            this.items = items;
+            this.nextToken = nextToken;
+        }
+
+        public List<Blog> getItems() { return items; }
+        public String getNextToken() { return nextToken; }
+    }
+
+    public PaginatedResult listBlogs(Integer limit, String nextToken) {
+        logger.info("Scanning blogs with limit: {} and nextToken: {}", limit, nextToken);
+        
+        ScanRequest.Builder builder = ScanRequest.builder()
+                .tableName(tableName);
+
+        if (limit != null && limit > 0) {
+            builder.limit(limit);
+        }
+
+        if (nextToken != null && !nextToken.isEmpty()) {
+            // Simple Base64 or JSON could be used, but for a simple PK/SK, we just use the ID
+            Map<String, AttributeValue> startKey = new HashMap<>();
+            startKey.put("PK", AttributeValue.builder().s("BLOG#" + nextToken).build());
+            startKey.put("SK", AttributeValue.builder().s("METADATA").build());
+            builder.exclusiveStartKey(startKey);
+        }
+
+        ScanResponse response = dynamoDbClient.scan(builder.build());
         List<Blog> blogs = new ArrayList<>();
         for (Map<String, AttributeValue> item : response.items()) {
             blogs.add(mapToBlog(item));
         }
-        return blogs;
+
+        String newNextToken = null;
+        if (response.hasLastEvaluatedKey() && response.lastEvaluatedKey().containsKey("PK")) {
+            // Extract the ID from "BLOG#<id>"
+            String pk = response.lastEvaluatedKey().get("PK").s();
+            newNextToken = pk.replace("BLOG#", "");
+        }
+
+        return new PaginatedResult(blogs, newNextToken);
     }
 
     public List<Blog> listBlogsByCategory(String category) {
+        logger.info("Querying blogs by category: {}", category);
         Map<String, AttributeValue> exprValues = new HashMap<>();
         exprValues.put(":cat", AttributeValue.builder().s(category).build());
 
@@ -83,6 +122,7 @@ public class BlogRepository {
     }
 
     public Blog getBlog(String id) {
+        logger.info("Fetching blog by ID: {}", id);
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("PK", AttributeValue.builder().s("BLOG#" + id).build());
         key.put("SK", AttributeValue.builder().s("METADATA").build());
@@ -94,17 +134,59 @@ public class BlogRepository {
 
         GetItemResponse response = dynamoDbClient.getItem(request);
         if (!response.hasItem() || response.item().isEmpty()) {
+            logger.warn("Blog not found: {}", id);
             return null;
         }
         return mapToBlog(response.item());
     }
 
     public void updateBlog(Blog blog) {
-        // In DynamoDB, overwriting with PutItem is often sufficient and easier for complete objects
-        saveBlog(blog);
+        logger.info("Performing partial update for blog: {}", blog.getId());
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("PK", AttributeValue.builder().s("BLOG#" + blog.getId()).build());
+        key.put("SK", AttributeValue.builder().s("METADATA").build());
+
+        Map<String, AttributeValueUpdate> updates = new HashMap<>();
+        updates.put("title", AttributeValueUpdate.builder()
+                .value(AttributeValue.builder().s(blog.getTitle()).build())
+                .action(AttributeAction.PUT).build());
+        updates.put("content", AttributeValueUpdate.builder()
+                .value(AttributeValue.builder().s(blog.getContent()).build())
+                .action(AttributeAction.PUT).build());
+        updates.put("category", AttributeValueUpdate.builder()
+                .value(AttributeValue.builder().s(blog.getCategory()).build())
+                .action(AttributeAction.PUT).build());
+        updates.put("status", AttributeValueUpdate.builder()
+                .value(AttributeValue.builder().s(blog.getStatus()).build())
+                .action(AttributeAction.PUT).build());
+        
+        if (blog.getAuthorName() != null) {
+            updates.put("authorName", AttributeValueUpdate.builder()
+                    .value(AttributeValue.builder().s(blog.getAuthorName()).build())
+                    .action(AttributeAction.PUT).build());
+        }
+        if (blog.getImageUrl() != null) {
+            updates.put("imageUrl", AttributeValueUpdate.builder()
+                    .value(AttributeValue.builder().s(blog.getImageUrl()).build())
+                    .action(AttributeAction.PUT).build());
+        }
+        if (blog.getSummary_ai() != null) {
+            updates.put("summary_ai", AttributeValueUpdate.builder()
+                    .value(AttributeValue.builder().s(blog.getSummary_ai()).build())
+                    .action(AttributeAction.PUT).build());
+        }
+
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName(tableName)
+                .key(key)
+                .attributeUpdates(updates)
+                .build();
+
+        dynamoDbClient.updateItem(request);
     }
 
     public void deleteBlog(String id) {
+        logger.info("Deleting blog: {}", id);
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("PK", AttributeValue.builder().s("BLOG#" + id).build());
         key.put("SK", AttributeValue.builder().s("METADATA").build());

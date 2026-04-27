@@ -9,9 +9,10 @@ import {
   CreateBlogResponse, 
   UpdateBlogResponse, 
   DeleteBlogResponse, 
-  GetUploadUrlResponse, 
+  GetUploadUrlResponse,  
   ListBlogsByCategoryResponse, 
-  GetBlogResponse 
+  GetBlogResponse,
+  BlogConnection
 } from './model/blog.model';
 
 @Injectable({ providedIn: 'root' })
@@ -27,21 +28,25 @@ export class BlogService {
     return this.authService.isAuthenticated() ? 'userPool' : 'apiKey';
   }
 
-  getBlogs(): Observable<Blog[]> {
-    return from(this._getBlogs()).pipe(
-      map(res => res.data.listBlogs)
+  getBlogs(limit?: number, nextToken?: string | null): Observable<BlogConnection> {
+    return from(this._getBlogs(limit, nextToken)).pipe(
+      map(res => res.data?.listBlogs || { items: [], nextToken: null })
     );
   }
 
-  private async _getBlogs(): Promise<GraphQLResponse<ListBlogsResponse>> {
+  private async _getBlogs(limit?: number, nextToken?: string | null): Promise<GraphQLResponse<ListBlogsResponse>> {
     return await this.getClient().graphql({
       query: `
-        query {
-          listBlogs {
-            id title authorId authorName content category status imageUrl summary_ai createdAt
+        query ListBlogs($limit: Int, $nextToken: String) {
+          listBlogs(limit: $limit, nextToken: $nextToken) {
+            items {
+              id title authorId authorName content category status imageUrl summary_ai createdAt
+            }
+            nextToken
           }
         }
       `,
+      variables: { limit, nextToken },
       authMode: this.getAuthMode()
     }) as GraphQLResponse<ListBlogsResponse>;
   }
