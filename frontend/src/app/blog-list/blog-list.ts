@@ -45,7 +45,17 @@ export class BlogList implements OnInit {
 
     this.categories$ = this.store.select(getAllBlogsUnfiltered).pipe(
       map(blogs => {
-        const cats = new Set(blogs.map((b: any) => b.category).filter(Boolean));
+        const normalizedCats = blogs
+          .map((b: any) => b.category)
+          .filter(Boolean)
+          .map((cat: string) => {
+            const trimmed = cat.trim();
+            if (!trimmed) return '';
+            return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+          })
+          .filter(Boolean);
+          
+        const cats = new Set(normalizedCats);
         return Array.from(cats).sort();
       })
     );

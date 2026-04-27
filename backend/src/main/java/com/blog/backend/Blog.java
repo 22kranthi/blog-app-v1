@@ -29,7 +29,18 @@ public class Blog {
     public void setAuthorName(String authorName) { this.authorName = authorName; }
 
     public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public void setCategory(String category) { 
+        if (category != null && !category.trim().isEmpty()) {
+            String trimmed = category.trim();
+            if (trimmed.length() > 1) {
+                this.category = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
+            } else {
+                this.category = trimmed.toUpperCase();
+            }
+        } else {
+            this.category = category;
+        }
+    }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
