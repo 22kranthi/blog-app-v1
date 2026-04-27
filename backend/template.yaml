@@ -180,6 +180,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
         - PolicyName: BlogPlatformLambdaPolicy
           PolicyDocument:
@@ -215,6 +216,7 @@ Resources:
       CodeUri: .
       Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
       Role: !GetAtt BlogFunctionRole.Arn
+      Tracing: Active
       Environment:
         Variables:
           MAIN_CLASS: com.blog.backend.ServerlessBackendApplication
