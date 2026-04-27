@@ -8,6 +8,8 @@ import { getAllBlogs } from '../store/blog.selector';
 import { loadBlogs } from '../store/blog.action';
 import { take } from 'rxjs';
 
+import { Blog } from '../model/blog.model';
+
 @Component({
   selector: 'app-blog-detail',
   standalone: true,
@@ -16,7 +18,7 @@ import { take } from 'rxjs';
   styleUrl: './blog-detail.css'
 })
 export class BlogDetail implements OnInit {
-  blog: any = null;
+  blog: Blog | null = null;
 
   private destroyRef = inject(DestroyRef);
 

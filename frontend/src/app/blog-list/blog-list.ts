@@ -9,6 +9,8 @@ import { deleteBlog, loadBlogs, filterBlogsByCategory } from '../store/blog.acti
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 
+import { Blog } from '../model/blog.model';
+
 @Component({
   selector: 'app-blog-list',
   standalone: true,
@@ -20,7 +22,7 @@ export class BlogList implements OnInit {
   @Input() mode: 'public' | 'my-blogs' | 'admin' = 'public';
 
   authService = inject(AuthService);
-  blogList: Observable<any>;
+  blogList: Observable<Blog[]>;
   categories$: Observable<string[]>;
   loading$: Observable<boolean>;
 
@@ -37,7 +39,7 @@ export class BlogList implements OnInit {
         const blogsToUse = this.mode === 'public' ? filtered : all;
         
         if (this.mode === 'my-blogs') {
-          return blogsToUse.filter((b: any) => b.authorId === userId);
+          return blogsToUse.filter((b: Blog) => b.authorId === userId);
         }
         return blogsToUse;
       })
@@ -46,7 +48,7 @@ export class BlogList implements OnInit {
     this.categories$ = this.store.select(getAllBlogsUnfiltered).pipe(
       map(blogs => {
         const normalizedCats = blogs
-          .map((b: any) => b.category)
+          .map((b: Blog) => b.category)
           .filter(Boolean)
           .map((cat: string) => {
             const trimmed = cat.trim();

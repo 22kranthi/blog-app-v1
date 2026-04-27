@@ -1,7 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { from, map } from 'rxjs';
+import { from, map, Observable } from 'rxjs';
 import { generateClient } from 'aws-amplify/api';
 import { AuthService } from './auth.service';
+import { 
+  Blog, 
+  GraphQLResponse, 
+  ListBlogsResponse, 
+  CreateBlogResponse, 
+  UpdateBlogResponse, 
+  DeleteBlogResponse, 
+  GetUploadUrlResponse, 
+  ListBlogsByCategoryResponse, 
+  GetBlogResponse 
+} from './model/blog.model';
 
 @Injectable({ providedIn: 'root' })
 export class BlogService {
@@ -12,45 +23,36 @@ export class BlogService {
     return generateClient();
   }
 
-  private getAuthMode(): any {
+  private getAuthMode(): 'userPool' | 'apiKey' {
     return this.authService.isAuthenticated() ? 'userPool' : 'apiKey';
   }
 
-  getBlogs() {
+  getBlogs(): Observable<Blog[]> {
     return from(this._getBlogs()).pipe(
-      map((res: any) => res.data.listBlogs)
+      map(res => res.data.listBlogs)
     );
   }
 
-  private async _getBlogs() {
+  private async _getBlogs(): Promise<GraphQLResponse<ListBlogsResponse>> {
     return await this.getClient().graphql({
       query: `
         query {
           listBlogs {
-            id
-            title
-            authorId
-            authorName
-            content
-            category
-            status
-            imageUrl
-            summary_ai
-            createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt
           }
         }
       `,
       authMode: this.getAuthMode()
-    } as any);
+    }) as GraphQLResponse<ListBlogsResponse>;
   }
 
-  createBlog(blog: any) {
+  createBlog(blog: Partial<Blog>): Observable<Blog> {
     return from(this._createBlog(blog)).pipe(
-      map((res: any) => res.data.createBlog)
+      map(res => res.data.createBlog)
     );
   }
 
-  private async _createBlog(blog: any) {
+  private async _createBlog(blog: Partial<Blog>): Promise<GraphQLResponse<CreateBlogResponse>> {
     return await this.getClient().graphql({
       query: `
         mutation($title: String!, $content: String!, $category: String!, $imageUrl: String, $authorName: String) {
@@ -61,16 +63,16 @@ export class BlogService {
       `,
       variables: blog,
       authMode: 'userPool'
-    } as any);
+    }) as GraphQLResponse<CreateBlogResponse>;
   }
 
-  updateBlog(blog: any) {
+  updateBlog(blog: Partial<Blog>): Observable<Blog> {
     return from(this._updateBlog(blog)).pipe(
-      map((res: any) => res.data.updateBlog)
+      map(res => res.data.updateBlog)
     );
   }
 
-  private async _updateBlog(blog: any) {
+  private async _updateBlog(blog: Partial<Blog>): Promise<GraphQLResponse<UpdateBlogResponse>> {
     return await this.getClient().graphql({
       query: `
         mutation($id: ID!, $title: String, $content: String, $category: String, $status: String, $imageUrl: String, $authorName: String) {
@@ -81,16 +83,16 @@ export class BlogService {
       `,
       variables: blog,
       authMode: 'userPool'
-    } as any);
+    }) as GraphQLResponse<UpdateBlogResponse>;
   }
 
-  deleteBlog(id: string) {
+  deleteBlog(id: string): Observable<string> {
     return from(this._deleteBlog(id)).pipe(
       map(() => id)
     );
   }
 
-  private async _deleteBlog(id: string) {
+  private async _deleteBlog(id: string): Promise<GraphQLResponse<DeleteBlogResponse>> {
     return await this.getClient().graphql({
       query: `
         mutation($id: ID!) {
@@ -99,16 +101,16 @@ export class BlogService {
       `,
       variables: { id },
       authMode: 'userPool'
-    } as any);
+    }) as GraphQLResponse<DeleteBlogResponse>;
   }
 
-  getUploadUrl(filename: string, contentType: string) {
+  getUploadUrl(filename: string, contentType: string): Observable<string> {
     return from(this._getUploadUrl(filename, contentType)).pipe(
-      map((res: any) => res.data.getUploadUrl)
+      map(res => res.data.getUploadUrl)
     );
   }
 
-  private async _getUploadUrl(filename: string, contentType: string) {
+  private async _getUploadUrl(filename: string, contentType: string): Promise<GraphQLResponse<GetUploadUrlResponse>> {
     return await this.getClient().graphql({
       query: `
         mutation($filename: String!, $contentType: String!) {
@@ -117,68 +119,50 @@ export class BlogService {
       `,
       variables: { filename, contentType },
       authMode: 'userPool'
-    } as any);
+    }) as GraphQLResponse<GetUploadUrlResponse>;
   }
 
-  getBlogsByCategory(category: string) {
+  getBlogsByCategory(category: string): Observable<Blog[]> {
     return from(this._getBlogsByCategory(category)).pipe(
-      map((res: any) => res.data.listBlogsByCategory)
+      map(res => res.data.listBlogsByCategory)
     );
   }
 
-  private async _getBlogsByCategory(category: string) {
+  private async _getBlogsByCategory(category: string): Promise<GraphQLResponse<ListBlogsByCategoryResponse>> {
     return await this.getClient().graphql({
       query: `
         query($category: String!) {
           listBlogsByCategory(category: $category) {
-            id
-            title
-            authorId
-            authorName
-            content
-            category
-            status
-            imageUrl
-            summary_ai
-            createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt
           }
         }
       `,
       variables: { category },
       authMode: this.getAuthMode()
-    } as any);
+    }) as GraphQLResponse<ListBlogsByCategoryResponse>;
   }
 
-  getBlog(id: string) {
+  getBlog(id: string): Observable<Blog> {
     return from(this._getBlog(id)).pipe(
-      map((res: any) => res.data.getBlog)
+      map(res => res.data.getBlog)
     );
   }
 
-  private async _getBlog(id: string) {
+  private async _getBlog(id: string): Promise<GraphQLResponse<GetBlogResponse>> {
     return await this.getClient().graphql({
       query: `
         query($id: ID!) {
           getBlog(id: $id) {
-            id
-            title
-            authorId
-            authorName
-            content
-            category
-            status
-            imageUrl
-            summary_ai
-            createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt
           }
         }
       `,
       variables: { id },
       authMode: this.getAuthMode()
-    } as any);
+    }) as GraphQLResponse<GetBlogResponse>;
   }
 
-  uploadFile(url: string, file: File) {
+  uploadFile(url: string, file: File): Observable<Response> {
     return from(fetch(url, {
       method: 'PUT',
       body: file,
