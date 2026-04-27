@@ -24,49 +24,49 @@
     </button>
   </div>
 
-  <ng-container *ngIf="blogList | async as blogs; else noBlogs">
-    <div class="blog-grid" *ngIf="blogs.length > 0; else noBlogs">
-      <div class="card" *ngFor="let blog of blogs; trackBy: trackById">
-        <div class="card-image" *ngIf="blog.imageUrl">
-          <img [src]="blog.imageUrl" [alt]="blog.title">
-        </div>
-
-        <div class="card-content">
-          <h3>{{ blog.title | uppercase }}</h3>
-          <div class="category-tags" *ngIf="blog.category">
-            <span class="tag">{{ blog.category }}</span>
+  @if (blogList | async; as blogs) {
+    <div class="blog-grid" [class.empty]="blogs.length === 0">
+      @for (blog of blogs; track blog.id) {
+        <div class="card">
+          <div class="card-image" *ngIf="blog.imageUrl">
+            <img [src]="blog.imageUrl" [alt]="blog.title">
           </div>
 
-          <div *ngIf="blog.summary_ai" class="ai-summary">
-            <span class="ai-label">✨ AI Summary</span>
-            <p class="ai-text">{{ blog.summary_ai }}</p>
+          <div class="card-content">
+            <h3>{{ blog.title | uppercase }}</h3>
+            <div class="category-tags" *ngIf="blog.category">
+              <span class="tag">{{ blog.category }}</span>
+            </div>
+
+            <div *ngIf="blog.summary_ai" class="ai-summary">
+              <span class="ai-label">✨ AI Summary</span>
+              <p class="ai-text">{{ blog.summary_ai }}</p>
+            </div>
+
+            <p class="description">{{ blog.content | slice:0:150 }}...</p>
+
+            <a [routerLink]="['/blog', blog.id]" class="btn-read-more">
+              Read More →
+            </a>
+
+            <div class="author-info">
+              <span>By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) + '...' }}</strong></span>
+              <span class="date">{{ blog.createdAt | date:'mediumDate' }}</span>
+            </div>
           </div>
 
-          <p class="description">{{ blog.content | slice:0:150 }}...</p>
-
-          <a [routerLink]="['/blog', blog.id]" class="btn-read-more">
-            Read More →
-          </a>
-
-          <div class="author-info">
-            <span>By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) + '...' }}</strong></span>
-            <span class="date">{{ blog.createdAt | date:'mediumDate' }}</span>
+          <div class="actions" *ngIf="mode !== 'public' && (mode === 'admin' || (mode === 'my-blogs' && authService.currentUserId() === blog.authorId))">
+            <button class="btn-edit" (click)="edit(blog.id)">Edit</button>
+            <button class="btn-delete" (click)="remove(blog.id)">Delete</button>
           </div>
         </div>
-
-        <div class="actions" *ngIf="mode !== 'public' && (mode === 'admin' || (mode === 'my-blogs' && authService.currentUserId() === blog.authorId))">
-          <button class="btn-edit" (click)="edit(blog.id)">Edit</button>
-          <button class="btn-delete" (click)="remove(blog.id)">Delete</button>
+      } @empty {
+        <div class="empty-state">
+          <p>{{ mode === 'my-blogs' ? "You haven't written any blogs yet." : "No blogs found." }}</p>
+          <a routerLink="/add" class="btn-primary" *ngIf="authService.isAuthenticated()">Create Blog</a>
         </div>
-
-      </div>
+      }
     </div>
-  </ng-container>
+  }
 
-  <ng-template #noBlogs>
-    <div class="empty-state">
-      <p>{{ mode === 'my-blogs' ? "You haven't written any blogs yet." : "No blogs found." }}</p>
-      <a routerLink="/add" class="btn-primary" *ngIf="authService.isAuthenticated()">Create Blog</a>
-    </div>
-  </ng-template>
 </ng-container>
