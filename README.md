@@ -1,59 +1,64 @@
-# BlogApp
+# AI-Powered Serverless Blog Platform
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.1.
+A professional, high-performance blog application built with a modern serverless architecture. This project features AI-driven content enhancement, a secure cloud backend, and a reactive frontend.
 
-## Development server
+## 🚀 Key Features
 
-To start a local development server, run:
+- **AI-Driven Content**: Automatic generation of blog summaries using **Amazon Bedrock (Llama 3.1 8B)**.
+- **Serverless Backend**: Built with **Java 17**, **Spring Cloud Function**, and **AWS SAM**.
+- **Reactive Frontend**: Built with **Angular** and **NgRx** for predictable state management.
+- **Secure Image Hosting**: Managed via **Amazon S3** with automatic cleanup logic.
+- **Optimized Data Layer**: High-performance **DynamoDB** queries with GSI indexing and pagination.
+- **Cloud Native**: Integrated with **AWS AppSync (GraphQL)** and **Cognito** for secure authentication.
 
-```bash
-ng serve
-```
+## 🏗️ Architecture
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- **Frontend**: Angular 19+, NgRx Store/Effects, Tailwind CSS (minimal).
+- **Backend**: Java 17, Spring Boot (Serverless adapter).
+- **Infrastructure**: 
+  - **AWS Lambda**: SnapStart enabled for fast performance.
+  - **Amazon DynamoDB**: PITR and SSE enabled.
+  - **Amazon Bedrock**: Multi-region routing for AI generation.
 
-## Code scaffolding
+## 🛠️ Getting Started
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Prerequisites
+- AWS CLI & SAM CLI
+- Maven 3.8+
+- Node.js & Angular CLI
 
-```bash
-ng generate component component-name
-```
+### Backend Setup
+1. Navigate to the `backend/` directory.
+2. Build the package:
+   ```bash
+   mvn clean package
+   ```
+3. Deploy to AWS:
+   ```bash
+   sam build
+   sam deploy
+   ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Frontend Setup
+1. Navigate to the `frontend/` directory.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. **Configure Environment**:
+   - Copy the template file: `cp src/environments/environment.example.ts src/environments/environment.ts`
+   - Open `src/environments/environment.ts` and fill in your specific AWS IDs (from the SAM deployment output).
+4. Run the development server:
+   ```bash
+   npm start
+   ```
+4. Access the app at `http://localhost:4200/`.
 
-```bash
-ng generate --help
-```
+## 🛡️ Security & Performance
+- **IAM Hardening**: Least-privilege access for all Lambda functions.
+- **Point-in-Time Recovery**: Enabled for all database tables.
+- **GSI Pagination**: Compound token logic for efficient data fetching.
+- **Reserved Keyword Handling**: Custom aliasing for DynamoDB reserved words.
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 📜 Implementation Details
+For a detailed list of every technical win and implemented feature, refer to the [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md).
