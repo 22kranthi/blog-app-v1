@@ -9,6 +9,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { take, Subscription, firstValueFrom } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { BlogService } from '../blog.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-blog-form',
@@ -55,6 +56,7 @@ export class BlogForm implements OnInit, OnDestroy {
             this.title = blog.title;
             this.category = blog.category || '';
             this.content = blog.content;
+            this.imagePreview = blog.imageUrl || null;
           }
         });
       }
@@ -77,12 +79,42 @@ export class BlogForm implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
+  isDragging = false;
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    
+    const file = event.dataTransfer?.files[0];
+    if (file) {
+      this.handleFile(file);
+    }
+  }
+
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file && this.isBrowser) {
+    if (file) {
+      this.handleFile(file);
+    }
+  }
+
+  handleFile(file: File) {
+    if (this.isBrowser) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large! Maximum 5MB allowed.");
-        event.target.value = '';
+        this.notificationService.error("File is too large! Maximum 5MB allowed.");
         return;
       }
       this.selectedFile = file;
@@ -99,9 +131,16 @@ export class BlogForm implements OnInit, OnDestroy {
     this.imagePreview = null;
   }
 
+  notificationService = inject(NotificationService);
+
   async save() {
     if (!this.title.trim() || !this.category.trim() || !this.content.trim()) {
-      alert("Please fill all the fields");
+      this.notificationService.error("Please fill all the text fields! 📝");
+      return;
+    }
+
+    if (!this.selectedFile && !this.imagePreview) {
+      this.notificationService.error("Please upload a cover image! 📸");
       return;
     }
 
