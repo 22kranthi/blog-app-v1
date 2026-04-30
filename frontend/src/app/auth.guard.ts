@@ -15,8 +15,8 @@ export const authGuard: CanActivateFn = async (route, state) => {
     return true;
   }
 
-  // Redirect to home if not authenticated
-  router.navigate(['/']);
+  // Redirect to login if not authenticated
+  router.navigate(['/login']);
   return false;
 };
 
@@ -28,10 +28,9 @@ export const adminGuard: CanActivateFn = async (route, state) => {
     await authService.checkAuthStatus();
   }
 
-  if (authService.isAdmin()) {
-    return true;
+  if (!authService.isAdmin()) {
+    router.navigate(['/login']);
+    return false;
   }
-
-  router.navigate(['/']);
-  return false;
+  return true;
 };

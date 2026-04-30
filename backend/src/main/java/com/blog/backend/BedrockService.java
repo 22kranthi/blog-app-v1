@@ -17,25 +17,29 @@ public class BedrockService {
     private final BedrockRuntimeClient bedrockClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     // Use the US Inference Profile ID for Llama 3.1 8B (fixes the 'on-demand throughput' error)
-    private final String modelId = "us.meta.llama3-1-8b-instruct-v1:0";
+    // Use the OpenAI GPT-OSS 20B model as requested
+    private final String modelId = "openai.gpt-oss-20b-1:0";
 
     public BedrockService(BedrockRuntimeClient bedrockClient) {
         this.bedrockClient = bedrockClient;
     }
 
     public String generateSummary(String content) {
-        // Force deployment ID: 2026-04-26-v3-LLAMA
         try {
-            System.out.println("Generating AI summary using Llama 3.1 8B. Content length: " + content.length());
+            System.out.println("Generating AI summary using OpenAI GPT-OSS 20B. Content length: " + content.length());
             
-            String prompt = "Summarize the following blog content in exactly two sentences. Output ONLY the two sentences. Do not include any preamble, steps, or 'Final Answer' text:\n\n" + content;
+            // Re-adding the strict instruction to prevent the model from being chatty
+            String prompt = "Summarize the following blog content in exactly two sentences. Output ONLY the two sentences. No preamble, no reasoning tags, and no introduction. text:\n\n" + content;
             
-            // Constructing a Llama 3 specific payload
+            // OpenAI models require the 'messages' array format
             Map<String, Object> payloadMap = new HashMap<>();
-            payloadMap.put("prompt", prompt);
-            payloadMap.put("max_gen_len", 300);
-            payloadMap.put("temperature", 0.5);
-            payloadMap.put("top_p", 0.9);
+            Map<String, String> userMessage = new HashMap<>();
+            userMessage.put("role", "user");
+            userMessage.put("content", prompt);
+            
+            payloadMap.put("messages", java.util.List.of(userMessage));
+            payloadMap.put("max_tokens", 300);
+            payloadMap.put("temperature", 0.1); // Lowering temperature for more direct answers
 
             String payload = objectMapper.writeValueAsString(payloadMap);
             
@@ -50,8 +54,22 @@ public class BedrockService {
             String responseBody = response.body().asUtf8String();
             
             JsonNode jsonNode = objectMapper.readTree(responseBody);
-            // Llama 3 response structure uses 'generation'
-            return jsonNode.get("generation").asText().trim();
+            
+            String result = "";
+            // Standard OpenAI chat response parsing
+            if (jsonNode.has("choices") && jsonNode.get("choices").isArray() && jsonNode.get("choices").size() > 0) {
+                JsonNode firstChoice = jsonNode.get("choices").get(0);
+                if (firstChoice.has("message")) {
+                    result = firstChoice.get("message").get("content").asText().trim();
+                }
+            }
+            
+            // Fallback for other formats
+            if (result.isEmpty() && jsonNode.has("completion")) result = jsonNode.get("completion").asText().trim();
+            if (result.isEmpty() && jsonNode.has("text")) result = jsonNode.get("text").asText().trim();
+            
+            // REGEX to strip any <reasoning>...</reasoning> tags if they still appear
+            return result.replaceAll("(?s)<reasoning>.*?</reasoning>", "").trim();
         } catch (Exception e) {
             System.err.println("Bedrock error: " + e.getMessage());
             e.printStackTrace();

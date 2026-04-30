@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, OnDestroy, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -32,12 +32,16 @@ export class BlogForm implements OnInit, OnDestroy {
   blogService = inject(BlogService);
   private actions$ = inject(Actions);
   private subscription = new Subscription();
+  isBrowser: boolean;
 
   constructor(
     private store: Store,
     private route: ActivatedRoute,
-    private router: Router
-  ) {}
+    private router: Router,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -75,7 +79,7 @@ export class BlogForm implements OnInit, OnDestroy {
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file) {
+    if (file && this.isBrowser) {
       if (file.size > 5 * 1024 * 1024) {
         alert("File is too large! Maximum 5MB allowed.");
         event.target.value = '';
