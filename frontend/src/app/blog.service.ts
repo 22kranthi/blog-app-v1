@@ -40,7 +40,7 @@ export class BlogService {
         query ListBlogs($limit: Int, $nextToken: String) {
           listBlogs(limit: $limit, nextToken: $nextToken) {
             items {
-              id title authorId authorName content category status imageUrl summary_ai createdAt
+              id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
             }
             nextToken
           }
@@ -62,7 +62,7 @@ export class BlogService {
       query: `
         mutation($title: String!, $content: String!, $category: String!, $imageUrl: String, $authorName: String) {
           createBlog(title: $title, content: $content, category: $category, imageUrl: $imageUrl, authorName: $authorName) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,
@@ -82,7 +82,7 @@ export class BlogService {
       query: `
         mutation($id: ID!, $title: String, $content: String, $category: String, $status: String, $imageUrl: String, $authorName: String) {
           updateBlog(id: $id, title: $title, content: $content, category: $category, status: $status, imageUrl: $imageUrl, authorName: $authorName) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,
@@ -138,7 +138,7 @@ export class BlogService {
       query: `
         query($category: String!) {
           listBlogsByCategory(category: $category) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,
@@ -158,7 +158,7 @@ export class BlogService {
       query: `
         query($id: ID!) {
           getBlog(id: $id) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt
+            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,

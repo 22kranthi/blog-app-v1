@@ -39,7 +39,7 @@ import { loadBlogs, deleteBlog } from '../store/blog.action';
                 <th style="padding: 1rem;">Title</th>
                 <th style="padding: 1rem;">Author</th>
                 <th style="padding: 1rem;">Category</th>
-                <th style="padding: 1rem;">Created</th>
+                <th style="padding: 1rem;">Date</th>
                 <th style="padding: 1rem; text-align: right;">Actions</th>
               </tr>
             </thead>
@@ -59,7 +59,11 @@ import { loadBlogs, deleteBlog } from '../store/blog.action';
                   </span>
                 </td>
                 <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
-                  {{ blog.createdAt | date:'shortDate' }}
+                  <div>{{ blog.createdAt | date:'shortDate' }}</div>
+                  <div *ngIf="blog.updatedAt && blog.updatedAt !== blog.createdAt" 
+                       style="font-size: 0.75rem; font-style: italic; color: #4f46e5;">
+                    Edited: {{ blog.updatedAt | date:'shortDate' }}
+                  </div>
                 </td>
                 <td style="padding: 1rem; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
                   <button [routerLink]="['/edit', blog.id]" 

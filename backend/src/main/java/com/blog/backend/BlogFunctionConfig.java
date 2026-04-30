@@ -146,6 +146,7 @@ public class BlogFunctionConfig {
         }
         
         if (authorName != null) existing.setAuthorName(authorName);
+        existing.setUpdatedAt(java.time.OffsetDateTime.now().toString());
 
         blogRepository.updateBlog(existing);
         logger.info("Successfully updated blog ID: {}", id);
@@ -177,7 +178,9 @@ public class BlogFunctionConfig {
         blog.setStatus("PUBLISHED");
         blog.setImageUrl(imageUrl);
         blog.setSummary_ai(aiSummary);
-        blog.setCreatedAt(java.time.Instant.now().toString());
+        String now = java.time.OffsetDateTime.now().toString();
+        blog.setCreatedAt(now);
+        blog.setUpdatedAt(now);
 
         logger.info("Saving new blog to DynamoDB...");
         // Persist to DynamoDB

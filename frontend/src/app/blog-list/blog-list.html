@@ -51,7 +51,12 @@
 
             <div class="author-info">
               <span>By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) + '...' }}</strong></span>
-              <span class="date">{{ blog.createdAt | date:'mediumDate' }}</span>
+              <div class="date-container">
+                <span class="date">{{ blog.createdAt | date:'mediumDate' }}</span>
+                <span *ngIf="blog.updatedAt && blog.updatedAt !== blog.createdAt" class="updated-date">
+                  (Edited: {{ blog.updatedAt | date:'mediumDate' }})
+                </span>
+              </div>
             </div>
           </div>
 
@@ -68,7 +73,7 @@
       }
     </div>
     
-    @if (nextToken$ | async) {
+    @if (blogs.length > 0 && (nextToken$ | async)) {
       <div class="load-more-container">
         <button (click)="loadMore()" class="load-more-btn" [disabled]="loading$ | async">
           @if (loading$ | async) {

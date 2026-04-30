@@ -24,3 +24,8 @@ backend/.aws-sam/
 frontend/dist/
 frontend/.angular/
 node_modules/
+
+
+#Private files
+INTERVIEW_PREP.md
+RESUME_DETAILS.md

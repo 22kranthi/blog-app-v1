@@ -44,6 +44,9 @@ public class BlogRepository {
         if (blog.getSummary_ai() != null) {
             item.put("summary_ai", AttributeValue.builder().s(blog.getSummary_ai()).build());
         }
+        if (blog.getUpdatedAt() != null) {
+            item.put("updatedAt", AttributeValue.builder().s(blog.getUpdatedAt()).build());
+        }
 
         PutItemRequest request = PutItemRequest.builder()
                 .tableName(tableName)
@@ -198,6 +201,11 @@ public class BlogRepository {
                     .value(AttributeValue.builder().s(blog.getSummary_ai()).build())
                     .action(AttributeAction.PUT).build());
         }
+        if (blog.getUpdatedAt() != null) {
+            updates.put("updatedAt", AttributeValueUpdate.builder()
+                    .value(AttributeValue.builder().s(blog.getUpdatedAt()).build())
+                    .action(AttributeAction.PUT).build());
+        }
 
         UpdateItemRequest request = UpdateItemRequest.builder()
                 .tableName(tableName)
@@ -234,6 +242,7 @@ public class BlogRepository {
         if (item.containsKey("createdAt")) blog.setCreatedAt(item.get("createdAt").s());
         if (item.containsKey("imageUrl")) blog.setImageUrl(item.get("imageUrl").s());
         if (item.containsKey("summary_ai")) blog.setSummary_ai(item.get("summary_ai").s());
+        if (item.containsKey("updatedAt")) blog.setUpdatedAt(item.get("updatedAt").s());
         return blog;
     }
 }

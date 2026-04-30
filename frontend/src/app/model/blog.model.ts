@@ -9,6 +9,7 @@ export interface Blog {
   status?: string;
   summary_ai?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 // GraphQL Specific Response Types

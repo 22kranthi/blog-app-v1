@@ -163,6 +163,7 @@ Resources:
           imageUrl: String
           summary_ai: String
           createdAt: String!
+          updatedAt: String
         }
         type BlogConnection @aws_api_key @aws_cognito_user_pools {
           items: [Blog]
