@@ -1,7 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { AuthService } from './auth.service';
-import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
+import { AmplifyAuthenticatorModule, AuthenticatorService } from '@aws-amplify/ui-angular';
 
 import { NotificationComponent } from './notification.component';
 
@@ -14,6 +14,9 @@ import { NotificationComponent } from './notification.component';
 })
 export class App implements OnInit {
   authService = inject(AuthService);
+  authenticator = inject(AuthenticatorService);
+  ngZone = inject(NgZone);
+  cdr = inject(ChangeDetectorRef);
   protected readonly title = signal('blog-app');
 
   formFields = {
@@ -38,5 +41,13 @@ export class App implements OnInit {
 
   ngOnInit() {
     this.authService.checkAuthStatus();
+    
+    // Fix for Amplify Authenticator dropping change detection events during Forgot Password
+    this.authenticator.subscribe((authState) => {
+      this.ngZone.run(() => {
+        this.cdr.detectChanges();
+      });
+    });
   }
 }
+
