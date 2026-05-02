@@ -4,13 +4,11 @@ import { BlogForm } from './blog-form/blog-form';
 import { BlogDetail } from './blog-detail/blog-detail';
 import { AdminDashboard } from './admin-dashboard/admin-dashboard';
 import { MyBlogs } from './my-blogs/my-blogs';
-import { Login } from './login/login';
 import { authGuard, adminGuard } from './auth.guard';
 import { NotFoundComponent } from './not-found.component';
 
 export const routes: Routes = [
   { path: '', component: BlogList },
-  { path: 'login', component: Login },
   { path: 'my-blogs', component: MyBlogs, canActivate: [authGuard] },
   { path: 'add', component: BlogForm, canActivate: [authGuard] },
   { path: 'edit/:id', component: BlogForm, canActivate: [authGuard] },

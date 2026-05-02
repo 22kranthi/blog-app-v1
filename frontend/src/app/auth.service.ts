@@ -12,6 +12,7 @@ export class AuthService {
   currentUserId = signal<string | null>(null);
   userDisplayName = signal<string | null>(null);
   showLoginModal = signal<boolean>(false);
+  redirectUrl: string | null = null;
 
   router = inject(Router);
 
@@ -20,6 +21,11 @@ export class AuthService {
       if (data.payload.event === 'signedIn') {
         await this.checkAuthStatus();
         this.showLoginModal.set(false); // Close the modal instantly
+        
+        if (this.redirectUrl) {
+          this.router.navigateByUrl(this.redirectUrl);
+          this.redirectUrl = null;
+        }
       } else if (data.payload.event === 'signedOut') {
         this.isAuthenticated.set(false);
         this.isAdmin.set(false);
