@@ -4,12 +4,14 @@ A professional, high-performance blog application built with a modern serverless
 
 ## 🚀 Key Features
 
-- **AI-Driven Content**: Automatic generation of blog summaries using **Amazon Bedrock (Llama 3.1 8B)**.
+- **AI-Driven Content**: Automatic generation of blog summaries using **Amazon Bedrock (OpenAI GPT-OSS 20B)**.
 - **Serverless Backend**: Built with **Java 17**, **Spring Cloud Function**, and **AWS SAM**.
 - **Reactive Frontend**: Built with **Angular** and **NgRx** for predictable state management.
 - **Secure Image Hosting**: Managed via **Amazon S3** with automatic cleanup logic.
-- **Optimized Data Layer**: High-performance **DynamoDB** queries with GSI indexing and pagination.
-- **Cloud Native**: Integrated with **AWS AppSync (GraphQL)** and **Cognito** for secure authentication.
+- **Advanced Filtering**: Smooth, premium sliding "Pill" category filter UI that auto-hides on empty states.
+- **Smart Authentication**: Unified, context-preserving glassmorphic login modal (eliminating context-breaking redirects).
+- **Optimized Data Layer**: High-performance **DynamoDB** queries leveraging Adjacency Lists for multi-category indexing.
+- **Cloud Native**: Integrated with **AWS AppSync (GraphQL)** and **Cognito** for secure access.
 
 ## 🏗️ Architecture
 

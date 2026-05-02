@@ -10,14 +10,15 @@ This document provides a comprehensive overview of the features and security mea
 - **Compute**: AWS Lambda with SnapStart enabled for reduced cold starts.
 
 ## 2. Core Blog Features
-- **Blog Management**: Full CRUD (Create, Read, Update, Delete) operations.
-- **AI Integration**: Automatic generation of two-sentence blog summaries using **Amazon Bedrock (Llama 3.1 8B)**.
+- **Blog Management**: Full CRUD (Create, Read, Update, Delete) operations with Multi-Category support.
+- **AI Integration**: Automatic generation of two-sentence blog summaries using **Amazon Bedrock (OpenAI GPT-OSS 20B)**.
 - **Image Handling**: Secure image uploads via S3 Presigned URLs.
 - **Author Identity**: Automatic tracking of blog authors via Cognito User Pool identities.
 
 ## 3. Database Performance & Optimization
 - **Query over Scan**: Replaced expensive full-table scans with high-performance **DynamoDB Queries**.
-- **Global Secondary Index (GSI)**: Implemented `StatusIndex` for fast retrieval of "PUBLISHED" blogs.
+- **Adjacency List Pattern**: Refactored database to use an Adjacency List design for robust, fast multi-category indexing without expensive multi-table joins.
+- **Global Secondary Index (GSI)**: Implemented `StatusIndex` for fast retrieval of "PUBLISHED" blogs, carefully engineered to prevent category mapping items from duplicating on the home feed.
 - **Automated Sorting**: Blogs are automatically sorted by `createdAt` (newest first) at the database level.
 - **Pagination**: Implemented efficient "Load More" pagination using `ExclusiveStartKey` (backend) and `nextToken` (frontend).
 
@@ -29,16 +30,22 @@ This document provides a comprehensive overview of the features and security mea
 - **Efficient Updates**: Optimized the backend to use `UpdateItem` instead of full-row overwrites.
 
 ## 5. Frontend Features & Architecture
+- **Framework**: Angular 21 utilizing Standalone Components and the new Control Flow syntax.
 - **State Management (NgRx)**: 
   - Centralized all blog logic into a clean Store/Effect/Selector pattern.
   - Eliminated logic duplication in components.
   - Implemented complex state handlers for appending paginated data.
+- **Smart Authentication**: 
+  - Unified all authentication flows into a context-preserving "Smart Modal" with a glassmorphic design.
+  - Eliminated the need for context-breaking dedicated login pages.
+  - Custom memory system intercepts unauthorized route access, saves the target URL, opens the modal, and automatically redirects upon successful login.
 - **Specific Views**:
   - **Admin Dashboard**: Centralized view for administrators to manage all content.
   - **My Blogs**: Personalized view for users to manage their own contributions.
-- **Navigation & Discovery**:
-  - **Category Filtering**: Dynamic UI buttons that allow users to filter the feed by category (Technology, Lifestyle, etc.).
-- **Modern UI**: Professional, minimalist design with a responsive "Masonry" style grid.
+- **Advanced Navigation & Discovery**:
+  - **Category Filtering**: High-end "Sliding Pill" category UI that smoothly transitions active states.
+  - **Intelligent Rendering**: The category filter bar automatically hides on empty states to maintain a clean layout.
+- **Modern UI**: Professional, minimalist design with a responsive "Masonry" style grid and premium micro-animations.
 - **User Feedback**: 
   - **Snackbar Notifications**: Real-time feedback for all actions (Success/Error).
   - **Skeleton Loaders**: Polished "loading" states for the home page.
@@ -46,6 +53,8 @@ This document provides a comprehensive overview of the features and security mea
 
 ## 6. Technical Bug Fixes & Refinements
 - **DynamoDB Reserved Keywords**: Resolved a critical crash caused by the `status` keyword by implementing `#s` expression attribute aliasing.
+- **Amplify Change Detection**: Solved a highly-specific bug in `@aws-amplify/ui-angular` where the "Forgot Password" UI would freeze by injecting `AuthenticatorService` and forcing Angular's `NgZone` to run `detectChanges()` on state transitions.
+- **Category Data Integrity**: Hardened the backend to ensure full metadata copying (denormalization) for category mapping items, solving GraphQL null-resolution errors.
 - **Cognito Group Parsing**: Robust `isAdmin` logic that correctly handles different formats of Cognito group claims (JSON arrays vs. strings).
 - **Deployment Optimization**: Correctly configured the SAM template to handle Maven JAR packaging and Spring Cloud Function routing.
 
