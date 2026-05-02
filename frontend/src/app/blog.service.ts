@@ -40,7 +40,7 @@ export class BlogService {
         query ListBlogs($limit: Int, $nextToken: String) {
           listBlogs(limit: $limit, nextToken: $nextToken) {
             items {
-              id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
+              id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
             }
             nextToken
           }
@@ -60,9 +60,9 @@ export class BlogService {
   private async _createBlog(blog: Partial<Blog>): Promise<GraphQLResponse<CreateBlogResponse>> {
     return await this.getClient().graphql({
       query: `
-        mutation($title: String!, $content: String!, $category: String!, $imageUrl: String, $authorName: String) {
-          createBlog(title: $title, content: $content, category: $category, imageUrl: $imageUrl, authorName: $authorName) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
+        mutation($title: String!, $content: String!, $categories: [String], $imageUrl: String, $authorName: String) {
+          createBlog(title: $title, content: $content, categories: $categories, imageUrl: $imageUrl, authorName: $authorName) {
+            id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,
@@ -80,9 +80,9 @@ export class BlogService {
   private async _updateBlog(blog: Partial<Blog>): Promise<GraphQLResponse<UpdateBlogResponse>> {
     return await this.getClient().graphql({
       query: `
-        mutation($id: ID!, $title: String, $content: String, $category: String, $status: String, $imageUrl: String, $authorName: String) {
-          updateBlog(id: $id, title: $title, content: $content, category: $category, status: $status, imageUrl: $imageUrl, authorName: $authorName) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
+        mutation($id: ID!, $title: String, $content: String, $categories: [String], $status: String, $imageUrl: String, $authorName: String) {
+          updateBlog(id: $id, title: $title, content: $content, categories: $categories, status: $status, imageUrl: $imageUrl, authorName: $authorName) {
+            id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,
@@ -138,7 +138,7 @@ export class BlogService {
       query: `
         query($category: String!) {
           listBlogsByCategory(category: $category) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
+            id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,
@@ -158,7 +158,7 @@ export class BlogService {
       query: `
         query($id: ID!) {
           getBlog(id: $id) {
-            id title authorId authorName content category status imageUrl summary_ai createdAt updatedAt
+            id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
           }
         }
       `,

@@ -54,7 +54,7 @@ export class BlogForm implements OnInit, OnDestroy {
           if (blog) {
             this.existingBlog = blog;
             this.title = blog.title;
-            this.category = blog.category || '';
+            this.category = blog.categories ? blog.categories.join(', ') : '';
             this.content = blog.content;
             this.imagePreview = blog.imageUrl || null;
           }
@@ -158,9 +158,13 @@ export class BlogForm implements OnInit, OnDestroy {
         imageUrl = uploadUrl.split('?')[0];
       }
 
+      const categoriesArray = this.category.split(',')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+
       if (this.editId) {
         if (!this.authService.isAdmin() && this.authService.currentUserId() !== this.existingBlog?.authorId) {
-          alert("You do not have permission to edit this blog!");
+          this.notificationService.error("You do not have permission to edit this blog!");
           this.isSubmitting = false;
           return;
         }
@@ -168,7 +172,7 @@ export class BlogForm implements OnInit, OnDestroy {
         this.store.dispatch(updateBlog({
           id: this.editId,
           title: this.title,
-          category: this.category,
+          categories: categoriesArray,
           content: this.content,
           imageUrl: imageUrl,
           authorName: this.authService.userDisplayName() || undefined
@@ -176,13 +180,13 @@ export class BlogForm implements OnInit, OnDestroy {
 
       } else {
         if (!this.authService.isAuthenticated()) {
-          alert("You must be logged in to post a blog.");
+          this.notificationService.error("You must be logged in to post a blog.");
           this.isSubmitting = false;
           return;
         }
         this.store.dispatch(addBlog({
           title: this.title,
-          category: this.category,
+          categories: categoriesArray,
           content: this.content,
           imageUrl: imageUrl,
           authorName: this.authService.userDisplayName() || undefined

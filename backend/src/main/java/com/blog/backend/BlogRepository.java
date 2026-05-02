@@ -16,44 +16,224 @@ public class BlogRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(BlogRepository.class);
     private final DynamoDbClient dynamoDbClient;
+    private final S3Service s3Service;
     private final String tableName = System.getenv().getOrDefault("BLOG_TABLE_NAME", "BlogTable");
 
-    public BlogRepository(DynamoDbClient dynamoDbClient) {
+    public BlogRepository(DynamoDbClient dynamoDbClient, S3Service s3Service) {
         this.dynamoDbClient = dynamoDbClient;
+        this.s3Service = s3Service;
     }
 
     public void saveBlog(Blog blog) {
-        logger.info("Saving new blog: {}", blog.getId());
-        Map<String, AttributeValue> item = new HashMap<>();
-        item.put("PK", AttributeValue.builder().s("BLOG#" + blog.getId()).build());
-        item.put("SK", AttributeValue.builder().s("METADATA").build());
-        item.put("id", AttributeValue.builder().s(blog.getId()).build());
-        item.put("title", AttributeValue.builder().s(blog.getTitle()).build());
-        item.put("content", AttributeValue.builder().s(blog.getContent()).build());
-        item.put("authorId", AttributeValue.builder().s(blog.getAuthorId()).build());
-        if (blog.getAuthorName() != null) {
-            item.put("authorName", AttributeValue.builder().s(blog.getAuthorName()).build());
-        }
-        item.put("category", AttributeValue.builder().s(blog.getCategory()).build());
-        item.put("status", AttributeValue.builder().s(blog.getStatus()).build());
-        item.put("createdAt", AttributeValue.builder().s(blog.getCreatedAt()).build());
+        logger.info("Saving/Updating blog: {}", blog.getId());
         
-        if (blog.getImageUrl() != null) {
-            item.put("imageUrl", AttributeValue.builder().s(blog.getImageUrl()).build());
-        }
-        if (blog.getSummary_ai() != null) {
-            item.put("summary_ai", AttributeValue.builder().s(blog.getSummary_ai()).build());
-        }
-        if (blog.getUpdatedAt() != null) {
-            item.put("updatedAt", AttributeValue.builder().s(blog.getUpdatedAt()).build());
+        // Normalize categories: Trim, Uppercase, and Remove Duplicates
+        List<String> normalizedCategories = new ArrayList<>();
+        if (blog.getCategories() != null) {
+            normalizedCategories = blog.getCategories().stream()
+                .filter(c -> c != null && !c.trim().isEmpty())
+                .map(c -> c.trim().toUpperCase())
+                .distinct()
+                .toList();
+            blog.setCategories(normalizedCategories);
         }
 
-        PutItemRequest request = PutItemRequest.builder()
+        // 0. Normalize categories
+        List<String> categories = blog.getCategories() != null ? blog.getCategories().stream()
+                .filter(java.util.Objects::nonNull)
+                .map(String::trim)
+                .filter(c -> !c.isEmpty())
+                .map(String::toUpperCase)
+                .distinct()
+                .toList() : new ArrayList<>();
+        blog.setCategories(categories);
+
+        // 1. Prepare Metadata Item
+        Map<String, AttributeValue> metadata = new HashMap<>();
+        metadata.put("PK", AttributeValue.builder().s("BLOG#" + blog.getId()).build());
+        metadata.put("SK", AttributeValue.builder().s("METADATA").build());
+        metadata.put("id", AttributeValue.builder().s(blog.getId()).build());
+        metadata.put("title", AttributeValue.builder().s(blog.getTitle()).build());
+        metadata.put("content", AttributeValue.builder().s(blog.getContent()).build());
+        metadata.put("authorId", AttributeValue.builder().s(blog.getAuthorId()).build());
+        metadata.put("status", AttributeValue.builder().s(blog.getStatus() != null ? blog.getStatus() : "PUBLISHED").build());
+        metadata.put("createdAt", AttributeValue.builder().s(blog.getCreatedAt()).build());
+        
+        if (blog.getAuthorName() != null) metadata.put("authorName", AttributeValue.builder().s(blog.getAuthorName()).build());
+        if (blog.getImageUrl() != null) metadata.put("imageUrl", AttributeValue.builder().s(blog.getImageUrl()).build());
+        if (blog.getSummary_ai() != null) metadata.put("summary_ai", AttributeValue.builder().s(blog.getSummary_ai()).build());
+        if (blog.getUpdatedAt() != null) metadata.put("updatedAt", AttributeValue.builder().s(blog.getUpdatedAt()).build());
+        
+        if (!categories.isEmpty()) {
+            metadata.put("categories", AttributeValue.builder().l(
+                categories.stream().map(c -> AttributeValue.builder().s(c).build()).toList()
+            ).build());
+        }
+
+        // 2. Prepare Batch Write Requests
+        List<WriteRequest> writeRequests = new ArrayList<>();
+        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(metadata).build()).build());
+
+        if (!categories.isEmpty() && "PUBLISHED".equals(blog.getStatus())) {
+            for (String category : categories) {
+                Map<String, AttributeValue> mapping = new HashMap<>();
+                mapping.put("PK", AttributeValue.builder().s("CATEGORY#" + category).build());
+                mapping.put("SK", AttributeValue.builder().s(blog.getCreatedAt() + "#BLOG#" + blog.getId()).build());
+                
+                mapping.put("id", AttributeValue.builder().s(blog.getId()).build());
+                mapping.put("title", AttributeValue.builder().s(blog.getTitle()).build());
+                mapping.put("authorId", AttributeValue.builder().s(blog.getAuthorId()).build());
+                mapping.put("content", AttributeValue.builder().s(blog.getContent()).build());
+                mapping.put("authorName", AttributeValue.builder().s(blog.getAuthorName() != null ? blog.getAuthorName() : "Unknown").build());
+                mapping.put("createdAt", AttributeValue.builder().s(blog.getCreatedAt()).build());
+                
+                if (blog.getImageUrl() != null) mapping.put("imageUrl", AttributeValue.builder().s(blog.getImageUrl()).build());
+                if (blog.getSummary_ai() != null) mapping.put("summary_ai", AttributeValue.builder().s(blog.getSummary_ai()).build());
+                
+                mapping.put("categories", AttributeValue.builder().l(
+                    categories.stream().map(c -> AttributeValue.builder().s(c).build()).toList()
+                ).build());
+                
+                writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(mapping).build()).build());
+            }
+        }
+
+        BatchWriteItemRequest batchRequest = BatchWriteItemRequest.builder()
+                .requestItems(Map.of(tableName, writeRequests))
+                .build();
+        
+        dynamoDbClient.batchWriteItem(batchRequest);
+    }
+
+    public void deleteBlog(String id) {
+        logger.info("Deleting blog: {}", id);
+        Blog blog = getBlog(id);
+        if (blog == null) return;
+
+        if (blog.getImageUrl() != null) {
+            s3Service.deleteFileFromUrl(blog.getImageUrl());
+        }
+
+        List<WriteRequest> deleteRequests = new ArrayList<>();
+        deleteRequests.add(WriteRequest.builder().deleteRequest(DeleteRequest.builder()
+                .key(Map.of(
+                    "PK", AttributeValue.builder().s("BLOG#" + id).build(),
+                    "SK", AttributeValue.builder().s("METADATA").build()
+                )).build()).build());
+
+        if (blog.getCategories() != null) {
+            for (String category : blog.getCategories()) {
+                deleteRequests.add(WriteRequest.builder().deleteRequest(DeleteRequest.builder()
+                        .key(Map.of(
+                            "PK", AttributeValue.builder().s("CATEGORY#" + category.toUpperCase()).build(),
+                            "SK", AttributeValue.builder().s(blog.getCreatedAt() + "#BLOG#" + blog.getId()).build()
+                        )).build()).build());
+            }
+        }
+
+        BatchWriteItemRequest batchRequest = BatchWriteItemRequest.builder()
+                .requestItems(Map.of(tableName, deleteRequests))
+                .build();
+        
+        dynamoDbClient.batchWriteItem(batchRequest);
+    }
+
+    public List<Blog> listBlogsByCategory(String category) {
+        Map<String, AttributeValue> exprValues = new HashMap<>();
+        exprValues.put(":pk", AttributeValue.builder().s("CATEGORY#" + category.toUpperCase()).build());
+
+        QueryRequest request = QueryRequest.builder()
                 .tableName(tableName)
-                .item(item)
+                .keyConditionExpression("PK = :pk")
+                .expressionAttributeValues(exprValues)
+                .scanIndexForward(false)
                 .build();
 
-        dynamoDbClient.putItem(request);
+        QueryResponse response = dynamoDbClient.query(request);
+        return response.items().stream().map(this::mapToBlog).toList();
+    }
+
+    public PaginatedResult listBlogs(Integer limit, String nextToken) {
+        Map<String, String> attrNames = Map.of("#s", "status");
+        Map<String, AttributeValue> attrValues = Map.of(":status", AttributeValue.builder().s("PUBLISHED").build());
+
+        QueryRequest.Builder builder = QueryRequest.builder()
+                .tableName(tableName)
+                .indexName("StatusIndex")
+                .keyConditionExpression("#s = :status")
+                .expressionAttributeNames(attrNames)
+                .expressionAttributeValues(attrValues)
+                .scanIndexForward(false);
+
+        if (limit != null) builder.limit(limit);
+        if (nextToken != null && !nextToken.isEmpty()) {
+            builder.exclusiveStartKey(TokenSerializer.deserialize(nextToken));
+        }
+
+        QueryResponse response = dynamoDbClient.query(builder.build());
+        List<Blog> blogs = response.items().stream().map(this::mapToBlog).toList();
+        String next = response.hasLastEvaluatedKey() ? TokenSerializer.serialize(response.lastEvaluatedKey()) : null;
+        
+        return new PaginatedResult(blogs, next);
+    }
+
+    public Blog getBlog(String id) {
+        Map<String, AttributeValue> key = Map.of(
+            "PK", AttributeValue.builder().s("BLOG#" + id).build(),
+            "SK", AttributeValue.builder().s("METADATA").build()
+        );
+
+        GetItemResponse response = dynamoDbClient.getItem(GetItemRequest.builder().tableName(tableName).key(key).build());
+        return (response.hasItem() && !response.item().isEmpty()) ? mapToBlog(response.item()) : null;
+    }
+
+    public void updateBlog(Blog blog) {
+        logger.info("Updating blog: {}", blog.getId());
+        Blog existingBlog = getBlog(blog.getId());
+        
+        if (existingBlog != null && existingBlog.getCategories() != null) {
+            // Find categories that are in existing but NOT in new blog
+            List<String> removedCategories = existingBlog.getCategories().stream()
+                    .filter(c -> blog.getCategories() == null || !blog.getCategories().contains(c))
+                    .toList();
+            
+            if (!removedCategories.isEmpty()) {
+                logger.info("Removing old category mappings: {}", removedCategories);
+                List<WriteRequest> deleteRequests = removedCategories.stream()
+                        .map(category -> WriteRequest.builder().deleteRequest(DeleteRequest.builder()
+                                .key(Map.of(
+                                    "PK", AttributeValue.builder().s("CATEGORY#" + category.toUpperCase()).build(),
+                                    "SK", AttributeValue.builder().s(existingBlog.getCreatedAt() + "#BLOG#" + blog.getId()).build()
+                                )).build()).build())
+                        .toList();
+                
+                dynamoDbClient.batchWriteItem(BatchWriteItemRequest.builder()
+                        .requestItems(Map.of(tableName, deleteRequests))
+                        .build());
+            }
+        }
+        
+        saveBlog(blog);
+    }
+
+    private Blog mapToBlog(Map<String, AttributeValue> item) {
+        Blog blog = new Blog();
+        if (item.containsKey("id")) blog.setId(item.get("id").s());
+        if (item.containsKey("title")) blog.setTitle(item.get("title").s());
+        if (item.containsKey("content")) blog.setContent(item.get("content").s());
+        if (item.containsKey("authorId")) blog.setAuthorId(item.get("authorId").s());
+        if (item.containsKey("authorName")) blog.setAuthorName(item.get("authorName").s());
+        if (item.containsKey("status")) blog.setStatus(item.get("status").s());
+        if (item.containsKey("createdAt")) blog.setCreatedAt(item.get("createdAt").s());
+        if (item.containsKey("imageUrl")) blog.setImageUrl(item.get("imageUrl").s());
+        if (item.containsKey("summary_ai")) blog.setSummary_ai(item.get("summary_ai").s());
+        if (item.containsKey("updatedAt")) blog.setUpdatedAt(item.get("updatedAt").s());
+        
+        blog.setCategories(new ArrayList<>());
+        if (item.containsKey("categories") && item.get("categories").hasL()) {
+            blog.setCategories(new java.util.ArrayList<>(item.get("categories").l().stream().map(AttributeValue::s).toList()));
+        }
+        return blog;
     }
 
     public static class PaginatedResult {
@@ -67,182 +247,5 @@ public class BlogRepository {
 
         public List<Blog> getItems() { return items; }
         public String getNextToken() { return nextToken; }
-    }
-
-    public PaginatedResult listBlogs(Integer limit, String nextToken) {
-        logger.info("Querying blogs from StatusIndex with limit: {} and nextToken: {}", limit, nextToken);
-        
-        Map<String, String> expressionAttributeNames = new HashMap<>();
-        expressionAttributeNames.put("#s", "status");
-
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status", AttributeValue.builder().s("PUBLISHED").build());
-
-        QueryRequest.Builder builder = QueryRequest.builder()
-                .tableName(tableName)
-                .indexName("StatusIndex")
-                .keyConditionExpression("#s = :status")
-                .expressionAttributeNames(expressionAttributeNames)
-                .expressionAttributeValues(expressionAttributeValues)
-                .scanIndexForward(false); // Newest first
-
-        if (limit != null && limit > 0) {
-            builder.limit(limit);
-        }
-
-        if (nextToken != null && !nextToken.isEmpty()) {
-            // In a GSI query, the ExclusiveStartKey must contain the Index keys + the Table keys
-            // Format: "status|createdAt|id" (simplified for this example)
-            try {
-                String[] parts = nextToken.split("\\|");
-                if (parts.length >= 3) {
-                    Map<String, AttributeValue> startKey = new HashMap<>();
-                    startKey.put("status", AttributeValue.builder().s("PUBLISHED").build());
-                    startKey.put("createdAt", AttributeValue.builder().s(parts[1]).build());
-                    startKey.put("PK", AttributeValue.builder().s("BLOG#" + parts[2]).build());
-                    startKey.put("SK", AttributeValue.builder().s("METADATA").build());
-                    builder.exclusiveStartKey(startKey);
-                }
-            } catch (Exception e) {
-                logger.error("Error parsing nextToken: {}", nextToken);
-            }
-        }
-
-        QueryResponse response = dynamoDbClient.query(builder.build());
-        List<Blog> blogs = new ArrayList<>();
-        for (Map<String, AttributeValue> item : response.items()) {
-            blogs.add(mapToBlog(item));
-        }
-
-        String newNextToken = null;
-        if (response.hasLastEvaluatedKey()) {
-            Map<String, AttributeValue> lek = response.lastEvaluatedKey();
-            // Create a compound token for the next page
-            String createdAt = lek.get("createdAt").s();
-            String id = lek.get("PK").s().replace("BLOG#", "");
-            newNextToken = "PUBLISHED|" + createdAt + "|" + id;
-        }
-
-        return new PaginatedResult(blogs, newNextToken);
-    }
-
-    public List<Blog> listBlogsByCategory(String category) {
-        logger.info("Querying blogs by category: {}", category);
-        Map<String, AttributeValue> exprValues = new HashMap<>();
-        exprValues.put(":cat", AttributeValue.builder().s(category).build());
-
-        QueryRequest request = QueryRequest.builder()
-                .tableName(tableName)
-                .indexName("CategoryIndex")
-                .keyConditionExpression("category = :cat")
-                .expressionAttributeValues(exprValues)
-                .scanIndexForward(false)
-                .build();
-
-        QueryResponse response = dynamoDbClient.query(request);
-        List<Blog> blogs = new ArrayList<>();
-        for (Map<String, AttributeValue> item : response.items()) {
-            blogs.add(mapToBlog(item));
-        }
-        return blogs;
-    }
-
-    public Blog getBlog(String id) {
-        logger.info("Fetching blog by ID: {}", id);
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("PK", AttributeValue.builder().s("BLOG#" + id).build());
-        key.put("SK", AttributeValue.builder().s("METADATA").build());
-
-        GetItemRequest request = GetItemRequest.builder()
-                .tableName(tableName)
-                .key(key)
-                .build();
-
-        GetItemResponse response = dynamoDbClient.getItem(request);
-        if (!response.hasItem() || response.item().isEmpty()) {
-            logger.warn("Blog not found: {}", id);
-            return null;
-        }
-        return mapToBlog(response.item());
-    }
-
-    public void updateBlog(Blog blog) {
-        logger.info("Performing partial update for blog: {}", blog.getId());
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("PK", AttributeValue.builder().s("BLOG#" + blog.getId()).build());
-        key.put("SK", AttributeValue.builder().s("METADATA").build());
-
-        Map<String, AttributeValueUpdate> updates = new HashMap<>();
-        updates.put("title", AttributeValueUpdate.builder()
-                .value(AttributeValue.builder().s(blog.getTitle()).build())
-                .action(AttributeAction.PUT).build());
-        updates.put("content", AttributeValueUpdate.builder()
-                .value(AttributeValue.builder().s(blog.getContent()).build())
-                .action(AttributeAction.PUT).build());
-        updates.put("category", AttributeValueUpdate.builder()
-                .value(AttributeValue.builder().s(blog.getCategory()).build())
-                .action(AttributeAction.PUT).build());
-        updates.put("status", AttributeValueUpdate.builder()
-                .value(AttributeValue.builder().s(blog.getStatus()).build())
-                .action(AttributeAction.PUT).build());
-        
-        if (blog.getAuthorName() != null) {
-            updates.put("authorName", AttributeValueUpdate.builder()
-                    .value(AttributeValue.builder().s(blog.getAuthorName()).build())
-                    .action(AttributeAction.PUT).build());
-        }
-        if (blog.getImageUrl() != null) {
-            updates.put("imageUrl", AttributeValueUpdate.builder()
-                    .value(AttributeValue.builder().s(blog.getImageUrl()).build())
-                    .action(AttributeAction.PUT).build());
-        }
-        if (blog.getSummary_ai() != null) {
-            updates.put("summary_ai", AttributeValueUpdate.builder()
-                    .value(AttributeValue.builder().s(blog.getSummary_ai()).build())
-                    .action(AttributeAction.PUT).build());
-        }
-        if (blog.getUpdatedAt() != null) {
-            updates.put("updatedAt", AttributeValueUpdate.builder()
-                    .value(AttributeValue.builder().s(blog.getUpdatedAt()).build())
-                    .action(AttributeAction.PUT).build());
-        }
-
-        UpdateItemRequest request = UpdateItemRequest.builder()
-                .tableName(tableName)
-                .key(key)
-                .attributeUpdates(updates)
-                .build();
-
-        dynamoDbClient.updateItem(request);
-    }
-
-    public void deleteBlog(String id) {
-        logger.info("Deleting blog: {}", id);
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("PK", AttributeValue.builder().s("BLOG#" + id).build());
-        key.put("SK", AttributeValue.builder().s("METADATA").build());
-
-        DeleteItemRequest request = DeleteItemRequest.builder()
-                .tableName(tableName)
-                .key(key)
-                .build();
-
-        dynamoDbClient.deleteItem(request);
-    }
-
-    private Blog mapToBlog(Map<String, AttributeValue> item) {
-        Blog blog = new Blog();
-        if (item.containsKey("id")) blog.setId(item.get("id").s());
-        if (item.containsKey("title")) blog.setTitle(item.get("title").s());
-        if (item.containsKey("content")) blog.setContent(item.get("content").s());
-        if (item.containsKey("authorId")) blog.setAuthorId(item.get("authorId").s());
-        if (item.containsKey("authorName")) blog.setAuthorName(item.get("authorName").s());
-        if (item.containsKey("category")) blog.setCategory(item.get("category").s());
-        if (item.containsKey("status")) blog.setStatus(item.get("status").s());
-        if (item.containsKey("createdAt")) blog.setCreatedAt(item.get("createdAt").s());
-        if (item.containsKey("imageUrl")) blog.setImageUrl(item.get("imageUrl").s());
-        if (item.containsKey("summary_ai")) blog.setSummary_ai(item.get("summary_ai").s());
-        if (item.containsKey("updatedAt")) blog.setUpdatedAt(item.get("updatedAt").s());
-        return blog;
     }
 }

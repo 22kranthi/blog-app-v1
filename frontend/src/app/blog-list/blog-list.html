@@ -1,5 +1,5 @@
-<!-- Loading State -->
-<div *ngIf="loading$ | async" class="loading-container">
+<!-- Skeleton Loading (Only on Initial Load) -->
+<div *ngIf="(loading$ | async) && (blogList | async)?.length === 0" class="loading-container">
   <div class="skeleton-banner"></div>
   <div class="blog-grid">
     <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
@@ -11,17 +11,21 @@
   </div>
 </div>
 
-<ng-container *ngIf="!(loading$ | async)">
+<ng-container>
+  <div [class.loading-overlay]="loading$ | async">
   <div class="header-banner" *ngIf="mode === 'public'">
     <h1>The Modern Blog</h1>
     <p>Read the latest articles below.</p>
   </div>
 
-  <div class="filter-section" *ngIf="mode === 'public' && (categories$ | async) as categories">
-    <button class="filter-btn active" (click)="filterByCategory(null)">All</button>
-    <button *ngFor="let cat of categories" class="filter-btn" (click)="filterByCategory(cat)">
-      {{ cat }}
-    </button>
+  <div class="filter-section" *ngIf="mode === 'public' && (hasBlogs$ | async) && (categories$ | async) as categories">
+    <div class="filter-group">
+      <div class="filter-indicator" [ngStyle]="indicatorStyle"></div>
+      <button class="filter-btn" [class.active]="activeCategory === null" (click)="filterByCategory(null, $event)">All</button>
+      <button *ngFor="let cat of categories" class="filter-btn" [class.active]="activeCategory === cat" (click)="filterByCategory(cat, $event)">
+        {{ cat }}
+      </button>
+    </div>
   </div>
 
   @if (blogList | async; as blogs) {
@@ -34,8 +38,8 @@
 
           <div class="card-content">
             <h3>{{ blog.title | uppercase }}</h3>
-            <div class="category-tags" *ngIf="blog.category">
-              <span class="tag">{{ blog.category }}</span>
+            <div class="category-tags" *ngIf="blog.categories.length">
+              <span class="tag" *ngFor="let cat of blog.categories">{{ cat | titlecase }}</span>
             </div>
 
             <div *ngIf="blog.summary_ai" class="ai-summary">
@@ -86,4 +90,5 @@
     }
   }
 
+  </div>
 </ng-container>

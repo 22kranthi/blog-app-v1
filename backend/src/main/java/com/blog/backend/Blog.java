@@ -1,11 +1,13 @@
 package com.blog.backend;
 
+import java.util.List;
+
 public class Blog {
     private String id;
     private String title;
     private String content;
     private String authorId;
-    private String category;
+    private List<String> categories;
     private String status;
     private String imageUrl;
     private String summary_ai;
@@ -29,19 +31,8 @@ public class Blog {
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { 
-        if (category != null && !category.trim().isEmpty()) {
-            String trimmed = category.trim();
-            if (trimmed.length() > 1) {
-                this.category = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
-            } else {
-                this.category = trimmed.toUpperCase();
-            }
-        } else {
-            this.category = category;
-        }
-    }
+    public List<String> getCategories() { return categories; }
+    public void setCategories(List<String> categories) { this.categories = categories; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

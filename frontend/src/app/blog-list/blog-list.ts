@@ -26,10 +26,17 @@ export class BlogList implements OnInit {
   categories$: Observable<string[]>;
   loading$: Observable<boolean>;
   nextToken$: Observable<string | null>;
+  activeCategory: string | null = null;
+  hasBlogs$: Observable<boolean>;
+  indicatorStyle = { transform: 'translateX(0px)', width: '0px', opacity: '0' };
 
   constructor(private store: Store, private router: Router) {
     this.loading$ = this.store.select(getLoading);
     this.nextToken$ = this.store.select(getNextToken);
+    this.hasBlogs$ = this.store.select(getAllBlogsUnfiltered).pipe(map(blogs => blogs.length > 0));
+    
+    // Initialize indicator on next tick to ensure DOM is ready
+    setTimeout(() => this.resetIndicator(), 500);
     
     // Select blogs based on mode and react to user changes
     this.blogList = combineLatest([
@@ -50,7 +57,7 @@ export class BlogList implements OnInit {
     this.categories$ = this.store.select(getAllBlogsUnfiltered).pipe(
       map(blogs => {
         const normalizedCats = blogs
-          .map((b: Blog) => b.category)
+          .flatMap((b: Blog) => b.categories || [])
           .filter(Boolean)
           .map((cat: string) => {
             const trimmed = cat.trim();
@@ -69,12 +76,32 @@ export class BlogList implements OnInit {
     this.store.dispatch(loadBlogs());
   }
 
-  filterByCategory(category: string | null) {
+  filterByCategory(category: string | null, event?: Event) {
+    this.activeCategory = category;
+    
+    if (event) {
+      const el = event.currentTarget as HTMLElement;
+      this.updateIndicator(el);
+    }
+
     if (category === null) {
       this.store.dispatch(loadBlogs());
     } else {
       this.store.dispatch(filterBlogsByCategory({ category }));
     }
+  }
+
+  private updateIndicator(el: HTMLElement) {
+    this.indicatorStyle = {
+      transform: `translateX(${el.offsetLeft}px)`,
+      width: `${el.offsetWidth}px`,
+      opacity: '1'
+    };
+  }
+
+  private resetIndicator() {
+    const allBtn = document.querySelector('.filter-btn') as HTMLElement;
+    if (allBtn) this.updateIndicator(allBtn);
   }
 
   loadMore() {

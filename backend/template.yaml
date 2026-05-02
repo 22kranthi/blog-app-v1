@@ -29,8 +29,6 @@ Resources:
           AttributeType: S
         - AttributeName: SK
           AttributeType: S
-        - AttributeName: category
-          AttributeType: S
         - AttributeName: status
           AttributeType: S
         - AttributeName: createdAt
@@ -45,14 +43,6 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       GlobalSecondaryIndexes:
-        - IndexName: CategoryIndex
-          KeySchema:
-            - AttributeName: category
-              KeyType: HASH
-            - AttributeName: createdAt
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
         - IndexName: StatusIndex
           KeySchema:
             - AttributeName: status
@@ -158,11 +148,11 @@ Resources:
           content: String!
           authorId: String!
           authorName: String
-          category: String!
-          status: String!
+          categories: [String]
+          status: String
           imageUrl: String
           summary_ai: String
-          createdAt: String!
+          createdAt: String
           updatedAt: String
         }
         type BlogConnection @aws_api_key @aws_cognito_user_pools {
@@ -175,8 +165,8 @@ Resources:
           listBlogsByCategory(category: String!): [Blog] @aws_api_key @aws_cognito_user_pools
         }
         type Mutation {
-          createBlog(title: String!, content: String!, category: String!, imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
-          updateBlog(id: ID!, title: String, content: String, category: String, status: String, imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
+          createBlog(title: String!, content: String!, categories: [String], imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
+          updateBlog(id: ID!, title: String, content: String, categories: [String], status: String, imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
           deleteBlog(id: ID!): Boolean @aws_cognito_user_pools
           getUploadUrl(filename: String!, contentType: String!): String @aws_cognito_user_pools
         }
@@ -217,6 +207,7 @@ Resources:
                   - dynamodb:DeleteItem
                   - dynamodb:Scan
                   - dynamodb:Query
+                  - dynamodb:BatchWriteItem
                 Resource: 
                   - !GetAtt BlogTable.Arn
                   - !Sub "${BlogTable.Arn}/index/*"

@@ -121,7 +121,7 @@ public class BlogFunctionConfig {
 
         String title = (String) args.get("title");
         String content = (String) args.get("content");
-        String category = (String) args.get("category");
+        java.util.List<String> categories = asStringList(args.get("categories"));
         String status = (String) args.get("status");
         String imageUrl = (String) args.get("imageUrl");
         String authorName = (String) args.get("authorName");
@@ -133,7 +133,7 @@ public class BlogFunctionConfig {
             String newSummary = bedrockService.generateSummary(content);
             existing.setSummary_ai(newSummary);
         }
-        if (category != null) existing.setCategory(category);
+        if (categories != null) existing.setCategories(categories);
         if (status != null) existing.setStatus(status);
         
         if (imageUrl != null) {
@@ -156,7 +156,7 @@ public class BlogFunctionConfig {
     private Blog createBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
         String title = (String) args.get("title");
         String content = (String) args.get("content");
-        String category = (String) args.get("category");
+        java.util.List<String> categories = asStringList(args.get("categories"));
         String imageUrl = (String) args.get("imageUrl");
         String authorNameArg = (String) args.get("authorName");
         String authorId = identity != null && identity.getUsername() != null ? identity.getUsername() : "anonymous";
@@ -172,7 +172,7 @@ public class BlogFunctionConfig {
         blog.setId(UUID.randomUUID().toString());
         blog.setTitle(title);
         blog.setContent(content);
-        blog.setCategory(category);
+        blog.setCategories(categories);
         blog.setAuthorId(authorId);
         blog.setAuthorName(authorName);
         blog.setStatus("PUBLISHED");
@@ -219,5 +219,16 @@ public class BlogFunctionConfig {
             throw new IllegalArgumentException("category is required");
         }
         return blogRepository.listBlogsByCategory(category);
+    }
+
+    private java.util.List<String> asStringList(Object obj) {
+        if (!(obj instanceof java.util.List)) {
+            return java.util.Collections.emptyList();
+        }
+        java.util.List<?> list = (java.util.List<?>) obj;
+        return list.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .toList();
     }
 }

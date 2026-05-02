@@ -50,8 +50,8 @@ export class BlogEffects {
   addBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(addBlog),
-      switchMap(({ title, category, content, imageUrl, authorName }) =>
-        this.blogService.createBlog({ title, category, content, imageUrl, authorName }).pipe(
+      switchMap(({ title, categories, content, imageUrl, authorName }) =>
+        this.blogService.createBlog({ title, categories, content, imageUrl, authorName }).pipe(
           map(blog => {
             this.notification.success('Blog published successfully! ✨');
             return addBlogSuccess({ blog });
@@ -68,8 +68,8 @@ export class BlogEffects {
   updateBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(updateBlog),
-      switchMap(({ id, title, category, content, imageUrl, status, authorName }) =>
-        this.blogService.updateBlog({ id, title, category, content, imageUrl, status, authorName }).pipe(
+      switchMap(({ id, title, categories, content, imageUrl, status, authorName }) =>
+        this.blogService.updateBlog({ id, title, categories, content, imageUrl, status, authorName }).pipe(
           map(() => {
             this.notification.success('Blog updated successfully!');
             return loadBlogs();

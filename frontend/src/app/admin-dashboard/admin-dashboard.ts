@@ -54,9 +54,12 @@ import { loadBlogs, deleteBlog } from '../store/blog.action';
                   {{ blog.authorName || (blog.authorId | slice:0:8) + '...' }}
                 </td>
                 <td style="padding: 1rem;">
-                  <span style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">
-                    {{ blog.category }}
-                  </span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    <span *ngFor="let cat of blog.categories" 
+                          style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">
+                      {{ cat | titlecase }}
+                    </span>
+                  </div>
                 </td>
                 <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
                   <div>{{ blog.createdAt | date:'shortDate' }}</div>

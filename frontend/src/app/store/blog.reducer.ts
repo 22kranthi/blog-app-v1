@@ -61,9 +61,9 @@ export const blogReducer = createReducer(
     filteredBlogs: state.selectedCategory === null ? [...state.filteredBlogs, blog] : state.filteredBlogs
   })),
 
-  on(updateBlog, (state, { id, title, category, content, authorName }) => {
-    const updatedAllBlogs = state.allBlogs.map(b => b.id === id ? { ...b, title, category, content, authorName: authorName || b.authorName } : b);
-    const updatedFiltered = state.filteredBlogs.map(b => b.id === id ? { ...b, title, category, content, authorName: authorName || b.authorName } : b);
+  on(updateBlog, (state, { id, title, categories, content, authorName }) => {
+    const updatedAllBlogs = state.allBlogs.map(b => b.id === id ? { ...b, title, categories, content, authorName: authorName || b.authorName } : b);
+    const updatedFiltered = state.filteredBlogs.map(b => b.id === id ? { ...b, title, categories, content, authorName: authorName || b.authorName } : b);
     return {
       ...state,
       allBlogs: updatedAllBlogs,

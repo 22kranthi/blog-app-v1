@@ -26,7 +26,7 @@ export const loadMoreBlogsSuccess = createAction(
 
 export const addBlog = createAction(
   '[Blog] Add Blog',
-  props<{ title: string; category: string; content: string; imageUrl?: string; authorName?: string }>()
+  props<{ title: string; categories: string[]; content: string; imageUrl?: string; authorName?: string }>()
 );
 
 export const addBlogSuccess = createAction(
@@ -36,7 +36,7 @@ export const addBlogSuccess = createAction(
 
 export const updateBlog = createAction(
   '[Blog] Update Blog',
-  props<{ id: string; title: string; category: string; content: string; imageUrl?: string; status?: string; authorName?: string }>()
+  props<{ id: string; title: string; categories: string[]; content: string; imageUrl?: string; status?: string; authorName?: string }>()
 );
 
 export const deleteBlog = createAction(
