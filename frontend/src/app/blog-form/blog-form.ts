@@ -6,7 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { addBlog, addBlogSuccess, updateBlog, loadBlogs } from '../store/blog.action';
 import { getAllBlogs } from '../store/blog.selector';
 import { Actions, ofType } from '@ngrx/effects';
-import { take, Subscription, firstValueFrom } from 'rxjs';
+import { take, Subscription, firstValueFrom, Subject, debounceTime } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { BlogService } from '../blog.service';
 import { NotificationService } from '../notification.service';
@@ -20,14 +20,22 @@ import { NotificationService } from '../notification.service';
 })
 export class BlogForm implements OnInit, OnDestroy {
   title: string = '';
-  category: string = '';
+  categoriesArray: string[] = [];
   content: string = '';
   isSubmitting: boolean = false;
+
+  // Dynamic Category Input
+  showCategoryInput = false;
+  newCategory = '';
 
   editId: string | null = null;
   existingBlog: any = null;
   imagePreview: string | null = null;
   selectedFile: File | null = null;
+
+  // Auto-Save RxJS
+  private formChanges$ = new Subject<void>();
+  draftStatus: string = 'Draft saved automatically';
 
   authService = inject(AuthService);
   blogService = inject(BlogService);
@@ -54,23 +62,35 @@ export class BlogForm implements OnInit, OnDestroy {
           if (blog) {
             this.existingBlog = blog;
             this.title = blog.title;
-            this.category = blog.categories ? blog.categories.join(', ') : '';
+            this.categoriesArray = [...(blog.categories || [])];
             this.content = blog.content;
             this.imagePreview = blog.imageUrl || null;
+            this.loadDraft(); // override with local draft if newer
           }
         });
+      } else {
+        this.loadDraft();
       }
     });
 
-    // Listen for successful creation/update to navigate
     this.subscription.add(
       this.actions$.pipe(
-        ofType(addBlogSuccess, loadBlogs) // loadBlogs is dispatched after updateBlog
+        ofType(addBlogSuccess, loadBlogs)
       ).subscribe(() => {
         if (this.isSubmitting) {
           this.isSubmitting = false;
+          this.clearDraft();
           this.router.navigate(['/']);
         }
+      })
+    );
+
+    // RxJS Debounced Auto-Save
+    this.subscription.add(
+      this.formChanges$.pipe(
+        debounceTime(1500)
+      ).subscribe(() => {
+        this.saveDraft();
       })
     );
   }
@@ -79,6 +99,64 @@ export class BlogForm implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
+  // --- Auto-Save Logic ---
+  onFieldChange() {
+    this.draftStatus = 'Saving...';
+    this.formChanges$.next();
+  }
+
+  saveDraft() {
+    if (this.isBrowser && (this.title || this.content || this.categoriesArray.length > 0)) {
+      const draft = {
+        title: this.title,
+        content: this.content,
+        categories: this.categoriesArray
+      };
+      const key = this.editId ? `draft_${this.editId}` : 'draft_new';
+      localStorage.setItem(key, JSON.stringify(draft));
+      this.draftStatus = 'Draft saved automatically';
+    }
+  }
+
+  loadDraft() {
+    if (this.isBrowser) {
+      const key = this.editId ? `draft_${this.editId}` : 'draft_new';
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          const draft = JSON.parse(saved);
+          if (draft.title) this.title = draft.title;
+          if (draft.content) this.content = draft.content;
+          if (draft.categories) this.categoriesArray = draft.categories;
+        } catch (e) {}
+      }
+    }
+  }
+
+  clearDraft() {
+    if (this.isBrowser) {
+      const key = this.editId ? `draft_${this.editId}` : 'draft_new';
+      localStorage.removeItem(key);
+    }
+  }
+
+  // --- Dynamic Category Logic ---
+  addCategory() {
+    const cat = this.newCategory.trim();
+    if (cat && !this.categoriesArray.includes(cat)) {
+      this.categoriesArray.push(cat);
+      this.onFieldChange();
+    }
+    this.newCategory = '';
+    this.showCategoryInput = false;
+  }
+
+  removeCategory(index: number) {
+    this.categoriesArray.splice(index, 1);
+    this.onFieldChange();
+  }
+
+  // --- Drag and Drop Logic ---
   isDragging = false;
 
   onDragOver(event: DragEvent) {
@@ -101,6 +179,7 @@ export class BlogForm implements OnInit, OnDestroy {
     const file = event.dataTransfer?.files[0];
     if (file) {
       this.handleFile(file);
+      this.onFieldChange();
     }
   }
 
@@ -108,6 +187,7 @@ export class BlogForm implements OnInit, OnDestroy {
     const file = event.target.files[0];
     if (file) {
       this.handleFile(file);
+      this.onFieldChange();
     }
   }
 
@@ -129,13 +209,14 @@ export class BlogForm implements OnInit, OnDestroy {
   removeImage() {
     this.selectedFile = null;
     this.imagePreview = null;
+    this.onFieldChange();
   }
 
   notificationService = inject(NotificationService);
 
   async save() {
-    if (!this.title.trim() || !this.category.trim() || !this.content.trim()) {
-      this.notificationService.error("Please fill all the text fields! 📝");
+    if (!this.title.trim() || this.categoriesArray.length === 0 || !this.content.trim()) {
+      this.notificationService.error("Please fill all the text fields and add a category! 📝");
       return;
     }
 
@@ -145,22 +226,16 @@ export class BlogForm implements OnInit, OnDestroy {
     }
 
     this.isSubmitting = true;
+    this.draftStatus = 'Publishing...';
 
     try {
       let imageUrl = this.existingBlog?.imageUrl;
 
       if (this.selectedFile) {
-        // 1. Get upload URL
         const uploadUrl = await firstValueFrom(this.blogService.getUploadUrl(this.selectedFile.name, this.selectedFile.type));
-        // 2. Upload to S3
         await firstValueFrom(this.blogService.uploadFile(uploadUrl, this.selectedFile));
-        // 3. Extract public URL (remove query params)
         imageUrl = uploadUrl.split('?')[0];
       }
-
-      const categoriesArray = this.category.split(',')
-        .map(c => c.trim())
-        .filter(c => c.length > 0);
 
       if (this.editId) {
         if (!this.authService.isAdmin() && this.authService.currentUserId() !== this.existingBlog?.authorId) {
@@ -172,7 +247,7 @@ export class BlogForm implements OnInit, OnDestroy {
         this.store.dispatch(updateBlog({
           id: this.editId,
           title: this.title,
-          categories: categoriesArray,
+          categories: this.categoriesArray,
           content: this.content,
           imageUrl: imageUrl,
           authorName: this.authService.userDisplayName() || undefined
@@ -186,7 +261,7 @@ export class BlogForm implements OnInit, OnDestroy {
         }
         this.store.dispatch(addBlog({
           title: this.title,
-          categories: categoriesArray,
+          categories: this.categoriesArray,
           content: this.content,
           imageUrl: imageUrl,
           authorName: this.authService.userDisplayName() || undefined
@@ -196,6 +271,7 @@ export class BlogForm implements OnInit, OnDestroy {
       console.error("Upload failed", error);
       alert("Failed to process request. Please try again.");
       this.isSubmitting = false;
+      this.draftStatus = 'Draft saved automatically';
     }
   }
 }

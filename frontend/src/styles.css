@@ -2,11 +2,14 @@
 
 :root {
   /* Colors */
-  --bg-color: #f9fafb; /* light gray */
+  --bg-color: #f7f6f3; /* Notion-style warm neutral */
   --card-bg: #ffffff;
+  --bg-card: #ffffff;
   --text-primary: #1e293b; /* dark slate */
   --text-secondary: #64748b; /* slate */
+  --text-tertiary: #94a3b8;
   --border-color: #e2e8f0;
+  --border-default: #e2e8f0;
   
   /* Accents */
   --primary: #4f46e5; /* indigo-600 */
@@ -15,6 +18,13 @@
   --success-hover: #059669; /* emerald-600 */
   --danger: #ef4444; /* red-500 */
   --danger-hover: #dc2626; /* red-600 */
+
+  /* Brand Accents (Compatibility) */
+  --purple-dark: #4f46e5;
+  --purple-mid: #818cf8;
+  --purple-light: #c7d2fe;
+  --purple-bg: #eef2ff;
+  --purple-text: #4338ca;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -76,4 +86,57 @@ button {
 input, textarea {
   font-family: var(--font-family);
   font-size: 1rem;
+}
+
+/* --- Shared Utility Classes (Editorial UI) --- */
+
+/* AI Summary Block */
+.ai-summary {
+  border-left: 2px solid var(--purple-light);
+  padding: 2px 0 2px 9px;
+  margin-bottom: 18px;
+}
+.ai-summary.article-view {
+  padding-left: 14px;
+  margin-bottom: 24px;
+}
+.ai-summary-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--purple-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+.ai-summary-text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.55;
+}
+.ai-summary-text.truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Category Chips */
+.chip-primary {
+  background: var(--purple-bg);
+  color: var(--purple-text);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.chip-overflow {
+  background: var(--bg-surface);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
 }

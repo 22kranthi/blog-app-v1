@@ -1,34 +1,37 @@
-<div class="detail-container">
-  <div class="back-link">
-    <a routerLink="/" class="btn-back">← Back to Home</a>
-  </div>
+<div class="article-wrapper">
+  <a routerLink="/" class="back-link">← Back to posts</a>
 
-  <article class="detail-card" *ngIf="blog">
-    <header class="detail-header">
-      <h1>{{ blog.title }}</h1>
-      <p class="author">By <span>{{ blog.authorName || (blog.authorId | slice:0:8) + '...' }}</span></p>
-      
-      <div class="category-tags" style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
-        <span *ngFor="let cat of blog.categories" 
-              style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
-          {{ cat | titlecase }}
-        </span>
-      </div>
-    </header>
-
-    <div class="detail-image" *ngIf="blog.imageUrl">
-      <img [src]="blog.imageUrl" [alt]="blog.title">
+  <div class="article-container" *ngIf="blog">
+    <div class="hero-img" [style.background]="blog.imageUrl ? 'transparent' : '#e0f2fe'">
+      <img *ngIf="blog.imageUrl" [src]="blog.imageUrl" [alt]="blog.title" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
     
-    <div *ngIf="blog.summary_ai" style="background: rgba(138,43,226,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #8a2be2; margin: 20px 0;">
-      <span style="font-size: 0.9rem; font-weight: bold; color: #8a2be2; text-transform: uppercase; letter-spacing: 1px;">✨ AI Summary</span>
-      <p style="margin: 8px 0 0; font-size: 1rem; font-style: italic; color: var(--text-secondary); line-height: 1.5;">{{ blog.summary_ai }}</p>
+    <div class="below-hero">
+      <span *ngIf="blog.categories && blog.categories.length > 0" class="chip-primary" style="text-transform: uppercase;">{{ blog.categories[0] }}</span>
+      <h1 class="article-title">{{ blog.title }}</h1>
+      <div class="author-row">
+        <div class="avatar">{{ (blog.authorName || blog.authorId || 'U') | slice:0:2 | uppercase }}</div>
+        <div class="author-info">By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) }}</strong> · {{ blog.createdAt | date:'MMM d, y' }} · {{ getReadingTime(blog.content) }} min read</div>
+      </div>
     </div>
+    
+    <div class="article-body">
+      <div *ngIf="blog.summary_ai" class="ai-summary article-view">
+        <div class="ai-summary-label"><span>✦</span> AI summary</div>
+        <div class="ai-summary-text">{{ blog.summary_ai }}</div>
+      </div>
 
-    <div class="detail-content" style="margin-top: 20px; line-height: 1.6;">
-      <p>{{ blog.content }}</p>
+      <div class="article-content">
+        <p>{{ blog.content }}</p>
+      </div>
+
+      <div class="tags-row" *ngIf="blog.categories && blog.categories.length > 0">
+        @for (cat of blog.categories; track cat) {
+          <span class="tag">{{ cat | titlecase }}</span>
+        }
+      </div>
     </div>
-  </article>
+  </div>
 
   <div class="empty-state" *ngIf="!blog">
     <p>Blog post not found.</p>

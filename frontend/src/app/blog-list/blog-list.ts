@@ -1,10 +1,10 @@
-import { Component, inject, OnInit, Input } from '@angular/core';
+import { Component, inject, OnInit, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, combineLatest, Subscription } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 import { Blog } from '../model/blog.model';
@@ -18,8 +18,9 @@ import { deleteBlog, loadBlogs, filterBlogsByCategory, loadMoreBlogs } from '../
   templateUrl: './blog-list.html',
   styleUrl: './blog-list.css'
 })
-export class BlogList implements OnInit {
-  @Input() mode: 'public' | 'my-blogs' | 'admin' = 'public';
+export class BlogList implements OnInit, AfterViewInit, OnDestroy {
+  mode: 'public' | 'my-blogs' | 'admin' = 'public';
+  private routeSub?: Subscription;
 
   authService = inject(AuthService);
   blogList: Observable<Blog[]>;
@@ -28,15 +29,20 @@ export class BlogList implements OnInit {
   nextToken$: Observable<string | null>;
   activeCategory: string | null = null;
   hasBlogs$: Observable<boolean>;
-  indicatorStyle = { transform: 'translateX(0px)', width: '0px', opacity: '0' };
+  isAdmin$: Observable<boolean>;
+  currentUserId$: Observable<string | null>;
+  indicatorStyle = { transform: 'translateX(4px)', width: '48px', opacity: '1' };
 
-  constructor(private store: Store, private router: Router) {
+  constructor(
+    private store: Store, 
+    private router: Router,
+    private route: ActivatedRoute
+  ) {
     this.loading$ = this.store.select(getLoading);
     this.nextToken$ = this.store.select(getNextToken);
-    this.hasBlogs$ = this.store.select(getAllBlogsUnfiltered).pipe(map(blogs => blogs.length > 0));
-    
-    // Initialize indicator on next tick to ensure DOM is ready
-    setTimeout(() => this.resetIndicator(), 500);
+    this.isAdmin$ = toObservable(this.authService.isAdmin);
+    this.currentUserId$ = toObservable(this.authService.currentUserId);
+    this.hasBlogs$ = this.store.select(getAllBlogsUnfiltered).pipe(map(blogs => (blogs?.length || 0) > 0));
     
     // Select blogs based on mode and react to user changes
     this.blogList = combineLatest([
@@ -73,7 +79,23 @@ export class BlogList implements OnInit {
   }
 
   ngOnInit() {
-    this.store.dispatch(loadBlogs());
+    this.routeSub = this.route.url.subscribe(segments => {
+      const path = segments[0]?.path;
+      if (path === 'my-blogs') this.mode = 'my-blogs';
+      else if (path === 'admin') this.mode = 'admin';
+      else this.mode = 'public';
+      
+      this.store.dispatch(loadBlogs());
+    });
+  }
+
+  ngAfterViewInit() {
+    // Initial indicator position for "All"
+    setTimeout(() => this.resetIndicator(), 500);
+  }
+
+  ngOnDestroy() {
+    this.routeSub?.unsubscribe();
   }
 
   filterByCategory(category: string | null, event?: Event) {
@@ -100,12 +122,20 @@ export class BlogList implements OnInit {
   }
 
   private resetIndicator() {
-    const allBtn = document.querySelector('.filter-btn') as HTMLElement;
-    if (allBtn) this.updateIndicator(allBtn);
+    // Retry finding the button if it's not yet in the DOM or not rendered
+    const tryReset = (attempts = 0) => {
+      const allBtn = document.querySelector('.filter-btn.active') as HTMLElement;
+      if (allBtn && allBtn.offsetWidth > 0) {
+        this.updateIndicator(allBtn);
+      } else if (attempts < 10) {
+        setTimeout(() => tryReset(attempts + 1), 100);
+      }
+    };
+    tryReset();
   }
 
   loadMore() {
-    this.store.dispatch(loadMoreBlogs({ limit: 5 }));
+    this.store.dispatch(loadMoreBlogs({ limit: 3 }));
   }
 
   edit(id: string) {
@@ -116,6 +146,14 @@ export class BlogList implements OnInit {
     if (confirm('Are you sure you want to delete this blog?')) {
       this.store.dispatch(deleteBlog({ id }));
     }
+  }
+
+  canEdit(blog: Blog): boolean {
+    if (this.mode === 'public') return false;
+    if (this.authService.isAdmin()) return true;
+    if (this.mode === 'my-blogs' && this.authService.currentUserId() === blog.authorId) return true;
+    if (this.mode === 'admin') return true;
+    return false;
   }
 
   trackById(_index: number, blog: { id: string }) {

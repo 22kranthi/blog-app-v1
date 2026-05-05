@@ -18,6 +18,21 @@ export class App implements OnInit {
   ngZone = inject(NgZone);
   cdr = inject(ChangeDetectorRef);
   protected readonly title = signal('blog-app');
+  isDropdownOpen = signal(false);
+
+  get initials(): string {
+    const name = this.authService.userDisplayName() || 'User';
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  toggleDropdown() {
+    this.isDropdownOpen.update(v => !v);
+  }
+
+  logout() {
+    this.isDropdownOpen.set(false);
+    this.authService.logout();
+  }
 
   formFields = {
     signUp: {
