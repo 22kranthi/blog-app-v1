@@ -19,8 +19,8 @@ export class BlogEffects {
   loadBlogs$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loadBlogs),
-      switchMap(() =>
-        this.blogService.getBlogs(5).pipe(
+      switchMap(({ limit }) =>
+        this.blogService.getBlogs(limit || 3).pipe(
           map(connection => loadBlogsSuccess({ connection })),
           catchError(error => {
             this.notification.error('Failed to load blogs. Please check your connection.');
@@ -72,7 +72,7 @@ export class BlogEffects {
         this.blogService.updateBlog({ id, title, categories, content, imageUrl, status, authorName }).pipe(
           map(() => {
             this.notification.success('Blog updated successfully!');
-            return loadBlogs();
+            return loadBlogs({});
           }),
           catchError(err => {
             this.notification.error('Failed to update blog.');
@@ -90,7 +90,7 @@ export class BlogEffects {
         this.blogService.deleteBlog(action.id).pipe(
           map(() => {
             this.notification.success('Blog deleted.');
-            return loadBlogs();
+            return loadBlogs({});
           }),
           catchError(err => {
             this.notification.error('Failed to delete blog.');

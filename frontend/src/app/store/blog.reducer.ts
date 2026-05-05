@@ -23,6 +23,9 @@ export const blogReducer = createReducer(
 
   on(loadBlogs, (state) => ({
     ...state,
+    allBlogs: [],
+    filteredBlogs: [],
+    nextToken: null,
     loading: true
   })),
 

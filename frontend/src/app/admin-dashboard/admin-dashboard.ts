@@ -4,15 +4,15 @@ import { Observable } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { getAllBlogs } from '../store/blog.selector';
-import { loadBlogs, deleteBlog } from '../store/blog.action';
+import { getAllBlogs, getLoading, getNextToken } from '../store/blog.selector';
+import { loadBlogs, deleteBlog, loadMoreBlogs } from '../store/blog.action';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="dashboard-container" style="padding: 2rem; max-width: 1000px; margin: 0 auto;">
+    <div class="dashboard-container" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
       <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
         🛡️ Admin Dashboard 
         <span style="font-size: 0.9rem; background: #4f46e5; color: white; padding: 2px 8px; border-radius: 12px;">Active</span>
@@ -61,7 +61,7 @@ import { loadBlogs, deleteBlog } from '../store/blog.action';
                     </span>
                   </div>
                 </td>
-                <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
+                <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">
                   <div>{{ blog.createdAt | date:'shortDate' }}</div>
                   <div *ngIf="blog.updatedAt && blog.updatedAt !== blog.createdAt" 
                        style="font-size: 0.75rem; font-style: italic; color: #4f46e5;">
@@ -82,6 +82,18 @@ import { loadBlogs, deleteBlog } from '../store/blog.action';
             </tbody>
           </table>
         </div>
+
+        <div *ngIf="(nextToken$ | async)" style="margin-top: 2rem; display: flex; justify-content: center;">
+          <button (click)="loadMore()" 
+                  [disabled]="loading$ | async"
+                  style="background: white; color: #4f46e5; border: 1.5px solid #4f46e5; padding: 10px 24px; border-radius: 30px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;">
+             @if (loading$ | async) {
+               Loading...
+             } @else {
+               Load More Content
+             }
+          </button>
+        </div>
       }
     </div>
   `
@@ -90,13 +102,21 @@ export class AdminDashboard implements OnInit {
   store = inject(Store);
   authService = inject(AuthService);
   blogs$: Observable<any[]>;
+  loading$: Observable<boolean>;
+  nextToken$: Observable<string | null>;
 
   constructor() {
     this.blogs$ = this.store.select(getAllBlogs);
+    this.loading$ = this.store.select(getLoading);
+    this.nextToken$ = this.store.select(getNextToken);
   }
 
   ngOnInit() {
-    this.store.dispatch(loadBlogs());
+    this.store.dispatch(loadBlogs({ limit: 50 }));
+  }
+
+  loadMore() {
+    this.store.dispatch(loadMoreBlogs({ limit: 50 }));
   }
 
   removeBlog(id: string) {

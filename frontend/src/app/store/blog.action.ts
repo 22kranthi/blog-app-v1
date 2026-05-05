@@ -2,7 +2,10 @@ import { createAction, props } from "@ngrx/store";
 import { Blog, BlogConnection } from  "../model/blog.model";
 
 
-export const loadBlogs = createAction('[Blog] Load Blogs');
+export const loadBlogs = createAction(
+  '[Blog] Load Blogs',
+  props<{ limit?: number }>()
+);
 
 export const loadBlogsSuccess = createAction(
   '[Blog] Load Blogs Success',

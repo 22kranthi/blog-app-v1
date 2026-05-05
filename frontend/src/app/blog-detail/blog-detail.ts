@@ -35,7 +35,7 @@ export class BlogDetail implements OnInit {
     // If blogs aren't loaded yet (e.g. direct link), load them
     this.store.select(getAllBlogs).pipe(take(1)).subscribe(blogs => {
       if (blogs.length === 0) {
-        this.store.dispatch(loadBlogs());
+        this.store.dispatch(loadBlogs({}));
       }
     });
 
