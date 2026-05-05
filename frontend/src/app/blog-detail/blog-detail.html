@@ -1,9 +1,17 @@
 <div class="article-wrapper">
   <a routerLink="/" class="back-link">← Back to posts</a>
 
-  <div class="article-container" *ngIf="blog">
-    <div class="hero-img" [style.background]="blog.imageUrl ? 'transparent' : '#e0f2fe'">
-      <img *ngIf="blog.imageUrl" [src]="blog.imageUrl" [alt]="blog.title" style="width: 100%; height: 100%; object-fit: cover;">
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="skeleton-article">
+    <div class="skeleton-hero"></div>
+    <div class="skeleton-title"></div>
+    <div class="skeleton-meta"></div>
+    <div class="skeleton-body"></div>
+  </div>
+
+  <div class="article-container" *ngIf="!(loading$ | async) && blog">
+    <div class="hero-img">
+      <img *ngIf="blog.imageUrl" [src]="blog.imageUrl" [alt]="blog.title">
     </div>
     
     <div class="below-hero">
@@ -33,7 +41,7 @@
     </div>
   </div>
 
-  <div class="empty-state" *ngIf="!blog">
+  <div class="empty-state" *ngIf="!(loading$ | async) && !blog">
     <p>Blog post not found.</p>
     <a routerLink="/" class="btn-primary">Return to Home</a>
   </div>

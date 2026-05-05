@@ -137,7 +137,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 340px;
+  height: 350px;
   transition: all 0.3s ease;
   position: relative;
   box-shadow: var(--shadow-sm);
@@ -154,11 +154,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 12px; /* Add some breathing room for logos */
 }
 .card-image img { 
   width: 100%; 
   height: 100%; 
-  object-fit: cover; 
+  object-fit: contain; /* Show the entire image without cropping */
 }
 
 .card-content {
@@ -186,14 +187,14 @@
 }
 
 .ai-summary-text {
-  font-size: 13px;
-  line-height: 1.4; /* Tighter line height to save space */
+  font-size: 12px;
+  line-height: 1.45; /* Tighter line height for more density */
   color: var(--text-secondary);
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* Limit to 2 lines to fit everything */
+  -webkit-line-clamp: 3; /* Increased to 3 lines with smaller text */
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 36px;
+  min-height: 50px; /* Adjusted to fit 3 lines of 12px */
 }
 
 .card-chips {

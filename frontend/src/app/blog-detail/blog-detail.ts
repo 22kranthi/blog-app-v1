@@ -4,9 +4,9 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
-import { getAllBlogs } from '../store/blog.selector';
+import { getAllBlogs, getLoading } from '../store/blog.selector';
 import { loadBlogs } from '../store/blog.action';
-import { take } from 'rxjs';
+import { take, Observable } from 'rxjs';
 
 import { Blog } from '../model/blog.model';
 
@@ -19,6 +19,7 @@ import { Blog } from '../model/blog.model';
 })
 export class BlogDetail implements OnInit {
   blog: Blog | null = null;
+  loading$: Observable<boolean>;
 
   private destroyRef = inject(DestroyRef);
 
@@ -26,7 +27,9 @@ export class BlogDetail implements OnInit {
     private store: Store,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) {
+    this.loading$ = this.store.select(getLoading);
+  }
 
   ngOnInit() {
     // If blogs aren't loaded yet (e.g. direct link), load them

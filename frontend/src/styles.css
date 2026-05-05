@@ -5,14 +5,15 @@
   --bg-color: #f7f6f3; /* Notion-style warm neutral */
   --card-bg: #ffffff;
   --bg-card: #ffffff;
-  --text-primary: #1e293b; /* dark slate */
-  --text-secondary: #64748b; /* slate */
-  --text-tertiary: #94a3b8;
+  --text-primary: #000000;   /* Pure Noir */
+  --text-secondary: #111827; /* Charcoal */
+  --text-tertiary: #374151;  /* Dark Slate */
+  --bg-surface: #f7f6f3;
   --border-color: #e2e8f0;
   --border-default: #e2e8f0;
   
   /* Accents */
-  --primary: #4f46e5; /* indigo-600 */
+  --primary: #4f46e5;
   --primary-hover: #4338ca; /* indigo-700 */
   --success: #10b981; /* emerald-500 */
   --success-hover: #059669; /* emerald-600 */
