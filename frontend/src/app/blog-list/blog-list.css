@@ -197,6 +197,58 @@
   min-height: 50px; /* Adjusted to fit 3 lines of 12px */
 }
 
+.card-actions {
+  display: flex;
+  gap: 8px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.25s ease;
+  z-index: 10;
+}
+
+.card:hover .card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn-action {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-action.edit:hover {
+  background: white;
+  color: #4f46e5;
+  border-color: #4f46e5;
+  transform: scale(1.1);
+}
+
+.btn-action.delete:hover {
+  background: #fff1f2;
+  color: #e11d48;
+  border-color: #e11d48;
+  transform: scale(1.1);
+}
+
 .card-chips {
   display: flex;
   gap: 5px;
@@ -223,32 +275,6 @@
   color: var(--purple-dark);
   text-decoration: none;
 }
-
-.card-actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.card:hover .card-actions { opacity: 1; }
-
-.btn-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: white;
-  border: 0.5px solid var(--border-default);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.btn-icon.delete:hover { color: #ef4444; }
 
 .actions-container {
   display: flex;
