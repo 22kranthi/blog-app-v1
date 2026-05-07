@@ -28,3 +28,8 @@ export const getNextToken = createSelector(
   selectBlogState,
   (state: BlogState) => state.nextToken
 );
+
+export const getCurrentLimit = createSelector(
+  selectBlogState,
+  (state: BlogState) => state.currentLimit
+);

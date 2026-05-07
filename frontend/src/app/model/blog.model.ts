@@ -28,7 +28,7 @@ export interface ListBlogsResponse {
 }
 
 export interface ListBlogsByCategoryResponse {
-  listBlogsByCategory: Blog[];
+  listBlogsByCategory: BlogConnection;
 }
 
 export interface GetBlogResponse {

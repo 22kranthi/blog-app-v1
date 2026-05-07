@@ -1,5 +1,5 @@
 import { Blog } from "../model/blog.model";
-import { addBlog, addBlogSuccess, deleteBlog, loadBlogs, loadBlogsSuccess, loadBlogsFailure, updateBlog, filterBlogsByCategorySuccess, loadMoreBlogs, loadMoreBlogsSuccess } from "./blog.action";
+import { addBlog, addBlogSuccess, deleteBlog, loadBlogs, loadBlogsSuccess, loadBlogsFailure, updateBlog, filterBlogsByCategory, filterBlogsByCategorySuccess, loadMoreBlogs, loadMoreBlogsSuccess } from "./blog.action";
 import { createReducer, on } from "@ngrx/store";
 
 export interface BlogState {
@@ -7,6 +7,7 @@ export interface BlogState {
   filteredBlogs: Blog[];
   selectedCategory: string | null;
   nextToken: string | null;
+  currentLimit: number;
   loading: boolean;
 }
 
@@ -15,19 +16,24 @@ export const initialState: BlogState = {
   filteredBlogs: [],
   selectedCategory: null,
   nextToken: null,
+  currentLimit: 3,
   loading: false
 };
 
 export const blogReducer = createReducer(
   initialState,
 
-  on(loadBlogs, (state) => ({
-    ...state,
-    allBlogs: [],
-    filteredBlogs: [],
-    nextToken: null,
-    loading: true
-  })),
+  on(loadBlogs, (state, { limit }) => {
+    const isModeSwitch = limit !== undefined && limit !== state.currentLimit;
+    return {
+      ...state,
+      allBlogs: isModeSwitch ? [] : state.allBlogs,
+      filteredBlogs: isModeSwitch ? [] : state.filteredBlogs,
+      nextToken: isModeSwitch ? null : state.nextToken,
+      currentLimit: limit || state.currentLimit,
+      loading: true
+    };
+  }),
 
   on(loadBlogsSuccess, (state, { connection }) => ({
     ...state,
@@ -43,15 +49,16 @@ export const blogReducer = createReducer(
     loading: true
   })),
 
-  on(loadMoreBlogsSuccess, (state, { connection }) => ({
-    ...state,
-    allBlogs: [...state.allBlogs, ...connection.items],
-    filteredBlogs: state.selectedCategory === null 
-      ? [...state.filteredBlogs, ...connection.items] 
-      : state.filteredBlogs,
-    nextToken: connection.nextToken,
-    loading: false
-  })),
+  on(loadMoreBlogsSuccess, (state, { connection }) => {
+    const isCategoryActive = !!state.selectedCategory;
+    return {
+      ...state,
+      allBlogs: isCategoryActive ? state.allBlogs : [...state.allBlogs, ...connection.items],
+      filteredBlogs: [...state.filteredBlogs, ...connection.items],
+      nextToken: connection.nextToken,
+      loading: false
+    };
+  }),
 
   on(loadBlogsFailure, (state) => ({
     ...state,
@@ -80,9 +87,17 @@ export const blogReducer = createReducer(
     filteredBlogs: state.filteredBlogs.filter(b => b.id !== id)
   })),
 
-  on(filterBlogsByCategorySuccess, (state, { blogs }) => ({
+  on(filterBlogsByCategory, (state, { category }) => ({
     ...state,
-    filteredBlogs: blogs
+    selectedCategory: category,
+    loading: true
+  })),
+
+  on(filterBlogsByCategorySuccess, (state, { connection }) => ({
+    ...state,
+    filteredBlogs: connection.items,
+    nextToken: connection.nextToken,
+    loading: false
   }))
 );
 

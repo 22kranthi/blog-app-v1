@@ -54,5 +54,5 @@ export const filterBlogsByCategory = createAction(
 
 export const filterBlogsByCategorySuccess = createAction(
   '[Blog] Filter By Category Success',
-  props<{ blogs: Blog[] }>()
+  props<{ connection: BlogConnection }>()
 );

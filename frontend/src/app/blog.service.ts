@@ -127,22 +127,25 @@ export class BlogService {
     }) as GraphQLResponse<GetUploadUrlResponse>;
   }
 
-  getBlogsByCategory(category: string): Observable<Blog[]> {
-    return from(this._getBlogsByCategory(category)).pipe(
-      map(res => res.data.listBlogsByCategory)
+  getBlogsByCategory(category: string, limit?: number, nextToken?: string | null): Observable<BlogConnection> {
+    return from(this._getBlogsByCategory(category, limit, nextToken)).pipe(
+      map(res => res.data?.listBlogsByCategory || { items: [], nextToken: null })
     );
   }
 
-  private async _getBlogsByCategory(category: string): Promise<GraphQLResponse<ListBlogsByCategoryResponse>> {
+  private async _getBlogsByCategory(category: string, limit?: number, nextToken?: string | null): Promise<GraphQLResponse<ListBlogsByCategoryResponse>> {
     return await this.getClient().graphql({
       query: `
-        query($category: String!) {
-          listBlogsByCategory(category: $category) {
-            id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
+        query($category: String!, $limit: Int, $nextToken: String) {
+          listBlogsByCategory(category: $category, limit: $limit, nextToken: $nextToken) {
+            items {
+              id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
+            }
+            nextToken
           }
         }
       `,
-      variables: { category },
+      variables: { category, limit, nextToken },
       authMode: this.getAuthMode()
     }) as GraphQLResponse<ListBlogsByCategoryResponse>;
   }

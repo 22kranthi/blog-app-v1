@@ -6,7 +6,7 @@ import { loadBlogs, loadBlogsSuccess, loadBlogsFailure, addBlog, addBlogSuccess,
 import { switchMap, map, catchError, withLatestFrom } from 'rxjs';
 import { of } from 'rxjs';
 import { NotificationService } from '../notification.service';
-import { getNextToken } from './blog.selector';
+import { getNextToken, getSelectedCategory, getCurrentLimit } from './blog.selector';
 
 @Injectable()
 export class BlogEffects {
@@ -34,16 +34,24 @@ export class BlogEffects {
   loadMoreBlogs$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loadMoreBlogs),
-      withLatestFrom(this.store.select(getNextToken)),
-      switchMap(([{ limit }, nextToken]) =>
-        this.blogService.getBlogs(limit || 5, nextToken).pipe(
+      withLatestFrom(
+        this.store.select(getNextToken),
+        this.store.select(getSelectedCategory)
+      ),
+      switchMap(([{ limit }, nextToken, selectedCategory]) => {
+        const fetchLimit = limit || 3;
+        const obs = selectedCategory 
+          ? this.blogService.getBlogsByCategory(selectedCategory, fetchLimit, nextToken)
+          : this.blogService.getBlogs(fetchLimit, nextToken);
+          
+        return obs.pipe(
           map(connection => loadMoreBlogsSuccess({ connection })),
           catchError(error => {
             this.notification.error('Failed to load more blogs.');
             return of(loadBlogsFailure({ error }));
           })
-        )
-      )
+        );
+      })
     )
   );
 
@@ -68,11 +76,12 @@ export class BlogEffects {
   updateBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(updateBlog),
-      switchMap(({ id, title, categories, content, imageUrl, status, authorName }) =>
+      withLatestFrom(this.store.select(getCurrentLimit)),
+      switchMap(([{ id, title, categories, content, imageUrl, status, authorName }, limit]) =>
         this.blogService.updateBlog({ id, title, categories, content, imageUrl, status, authorName }).pipe(
           map(() => {
             this.notification.success('Blog updated successfully!');
-            return loadBlogs({});
+            return loadBlogs({ limit });
           }),
           catchError(err => {
             this.notification.error('Failed to update blog.');
@@ -86,11 +95,12 @@ export class BlogEffects {
   deleteBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(deleteBlog),
-      switchMap(action =>
+      withLatestFrom(this.store.select(getCurrentLimit)),
+      switchMap(([action, limit]) =>
         this.blogService.deleteBlog(action.id).pipe(
           map(() => {
             this.notification.success('Blog deleted.');
-            return loadBlogs({});
+            return loadBlogs({ limit });
           }),
           catchError(err => {
             this.notification.error('Failed to delete blog.');
@@ -106,13 +116,13 @@ export class BlogEffects {
       ofType(filterBlogsByCategory),
       switchMap(({ category }) => {
         if (!category) {
-          return of(filterBlogsByCategorySuccess({ blogs: [] }));
+          return of(filterBlogsByCategorySuccess({ connection: { items: [], nextToken: null } }));
         }
-        return this.blogService.getBlogsByCategory(category).pipe(
-          map(blogs => filterBlogsByCategorySuccess({ blogs: blogs || [] })),
+        return this.blogService.getBlogsByCategory(category, 3).pipe(
+          map(connection => filterBlogsByCategorySuccess({ connection })),
           catchError(err => {
             console.error('Failed to filter blogs by category:', err);
-            return of(filterBlogsByCategorySuccess({ blogs: [] }));
+            return of(filterBlogsByCategorySuccess({ connection: { items: [], nextToken: null } }));
           })
         );
       })

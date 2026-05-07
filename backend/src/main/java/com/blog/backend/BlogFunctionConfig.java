@@ -213,12 +213,14 @@ public class BlogFunctionConfig {
         return blogRepository.getBlog(id);
     }
 
-    private java.util.List<Blog> listBlogsByCategory(Map<String, Object> args) {
+    private BlogRepository.PaginatedResult listBlogsByCategory(Map<String, Object> args) {
         String category = (String) args.get("category");
         if (category == null || category.isBlank()) {
             throw new IllegalArgumentException("category is required");
         }
-        return blogRepository.listBlogsByCategory(category);
+        Integer limit = (Integer) args.get("limit");
+        String nextToken = (String) args.get("nextToken");
+        return blogRepository.listBlogsByCategory(category, limit, nextToken);
     }
 
     private java.util.List<String> asStringList(Object obj) {

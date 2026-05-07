@@ -138,19 +138,26 @@ public class BlogRepository {
         dynamoDbClient.batchWriteItem(batchRequest);
     }
 
-    public List<Blog> listBlogsByCategory(String category) {
+    public PaginatedResult listBlogsByCategory(String category, Integer limit, String nextToken) {
         Map<String, AttributeValue> exprValues = new HashMap<>();
         exprValues.put(":pk", AttributeValue.builder().s("CATEGORY#" + category.toUpperCase()).build());
 
-        QueryRequest request = QueryRequest.builder()
+        QueryRequest.Builder builder = QueryRequest.builder()
                 .tableName(tableName)
                 .keyConditionExpression("PK = :pk")
                 .expressionAttributeValues(exprValues)
-                .scanIndexForward(false)
-                .build();
+                .scanIndexForward(false);
 
-        QueryResponse response = dynamoDbClient.query(request);
-        return response.items().stream().map(this::mapToBlog).toList();
+        if (limit != null) builder.limit(limit);
+        if (nextToken != null && !nextToken.isEmpty()) {
+            builder.exclusiveStartKey(TokenSerializer.deserialize(nextToken));
+        }
+
+        QueryResponse response = dynamoDbClient.query(builder.build());
+        List<Blog> blogs = response.items().stream().map(this::mapToBlog).toList();
+        String next = response.hasLastEvaluatedKey() ? TokenSerializer.serialize(response.lastEvaluatedKey()) : null;
+
+        return new PaginatedResult(blogs, next);
     }
 
     public PaginatedResult listBlogs(Integer limit, String nextToken) {
