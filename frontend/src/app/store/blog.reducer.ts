@@ -6,6 +6,7 @@ export interface BlogState {
   allBlogs: Blog[];
   filteredBlogs: Blog[];
   selectedCategory: string | null;
+  selectedAuthorId: string | null;
   nextToken: string | null;
   currentLimit: number;
   loading: boolean;
@@ -15,20 +16,22 @@ export const initialState: BlogState = {
   allBlogs: [],
   filteredBlogs: [],
   selectedCategory: null,
+  selectedAuthorId: null,
   nextToken: null,
-  currentLimit: 3,
+  currentLimit: 6,
   loading: false
 };
 
 export const blogReducer = createReducer(
   initialState,
 
-  on(loadBlogs, (state, { limit }) => {
-    const isModeSwitch = limit !== undefined && limit !== state.currentLimit;
+  on(loadBlogs, (state, { limit, authorId }) => {
+    const isModeSwitch = (limit !== undefined && limit !== state.currentLimit) || (authorId !== state.selectedAuthorId);
     return {
       ...state,
       allBlogs: isModeSwitch ? [] : state.allBlogs,
       filteredBlogs: isModeSwitch ? [] : state.filteredBlogs,
+      selectedAuthorId: authorId || null,
       nextToken: isModeSwitch ? null : state.nextToken,
       currentLimit: limit || state.currentLimit,
       loading: true

@@ -76,9 +76,21 @@
         </div>
       </div>
     } @empty {
-      <div class="empty-state">
-        <p>{{ mode === 'my-blogs' ? "You haven't written any blogs yet." : "No blogs found." }}</p>
-        <a routerLink="/add" class="btn-primary" *ngIf="authService.isAuthenticated()">Create Blog</a>
+      <div class="empty-state-container">
+        <div class="empty-illustration">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="15" y2="17"/>
+            <line x1="9" y1="9" x2="10" y2="9"/>
+          </svg>
+        </div>
+        <h2>No stories here yet</h2>
+        <p>{{ mode === 'my-blogs' ? "Your editorial journey hasn't started. Share your first deep technical insight today." : "Our writers are currently preparing new technical insights. Check back soon!" }}</p>
+        <a routerLink="/add" class="empty-cta-btn" *ngIf="authService.isAuthenticated() || mode === 'public'">
+          {{ mode === 'my-blogs' ? 'Write your first post' : 'Create a blog post' }}
+        </a>
       </div>
     }
   </div>

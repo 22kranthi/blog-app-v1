@@ -18,6 +18,7 @@ public class BlogRepository {
     private final DynamoDbClient dynamoDbClient;
     private final S3Service s3Service;
     private final String tableName = System.getenv().getOrDefault("BLOG_TABLE_NAME", "BlogTable");
+    private static final int DEFAULT_LIMIT = 6;
 
     public BlogRepository(DynamoDbClient dynamoDbClient, S3Service s3Service) {
         this.dynamoDbClient = dynamoDbClient;
@@ -149,12 +150,48 @@ public class BlogRepository {
                 .scanIndexForward(false);
 
         if (limit != null) builder.limit(limit);
+        else builder.limit(DEFAULT_LIMIT);
         if (nextToken != null && !nextToken.isEmpty()) {
             builder.exclusiveStartKey(TokenSerializer.deserialize(nextToken));
         }
 
         QueryResponse response = dynamoDbClient.query(builder.build());
         List<Blog> blogs = response.items().stream().map(this::mapToBlog).toList();
+        String next = response.hasLastEvaluatedKey() ? TokenSerializer.serialize(response.lastEvaluatedKey()) : null;
+
+        return new PaginatedResult(blogs, next);
+    }
+
+    public PaginatedResult listBlogsByAuthor(String authorId, Integer limit, String nextToken) {
+        logger.info("Listing blogs for author: {}, limit: {}", authorId, limit);
+        
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":author", AttributeValue.builder().s(authorId).build());
+        expressionAttributeValues.put(":metadata", AttributeValue.builder().s("METADATA").build());
+
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        expressionAttributeNames.put("#sk", "SK");
+
+        QueryRequest.Builder queryRequestBuilder = QueryRequest.builder()
+                .tableName(tableName)
+                .indexName("AuthorIndex")
+                .keyConditionExpression("authorId = :author")
+                .filterExpression("#sk = :metadata")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .scanIndexForward(false);
+
+        if (limit != null) queryRequestBuilder.limit(limit);
+        else queryRequestBuilder.limit(DEFAULT_LIMIT);
+        if (nextToken != null && !nextToken.isEmpty()) {
+            queryRequestBuilder.exclusiveStartKey(TokenSerializer.deserialize(nextToken));
+        }
+
+        QueryResponse response = dynamoDbClient.query(queryRequestBuilder.build());
+        List<Blog> blogs = response.items().stream()
+                .map(this::mapToBlog)
+                .toList();
+
         String next = response.hasLastEvaluatedKey() ? TokenSerializer.serialize(response.lastEvaluatedKey()) : null;
 
         return new PaginatedResult(blogs, next);
@@ -173,6 +210,7 @@ public class BlogRepository {
                 .scanIndexForward(false);
 
         if (limit != null) builder.limit(limit);
+        else builder.limit(DEFAULT_LIMIT);
         if (nextToken != null && !nextToken.isEmpty()) {
             builder.exclusiveStartKey(TokenSerializer.deserialize(nextToken));
         }

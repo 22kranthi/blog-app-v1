@@ -31,6 +31,10 @@ export interface ListBlogsByCategoryResponse {
   listBlogsByCategory: BlogConnection;
 }
 
+export interface ListBlogsByAuthorResponse {
+  listBlogsByAuthor: BlogConnection;
+}
+
 export interface GetBlogResponse {
   getBlog: Blog;
 }

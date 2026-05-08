@@ -29,7 +29,7 @@ public class BedrockService {
             System.out.println("Generating AI summary using OpenAI GPT-OSS 20B. Content length: " + content.length());
             
             // Re-adding the strict instruction to prevent the model from being chatty
-            String prompt = "Summarize the following blog content in exactly two sentences. Output ONLY the two sentences. No preamble, no reasoning tags, and no introduction. text:\n\n" + content;
+            String prompt = "Summarize the following blog content as a punchy editorial teaser. Output EXACTLY two complete sentences. Do NOT use run-on sentences. Ensure the output is complete and ends with a period. No preamble or tags. text:\n\n" + content;
             
             // OpenAI models require the 'messages' array format
             Map<String, Object> payloadMap = new HashMap<>();
@@ -56,18 +56,29 @@ public class BedrockService {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             
             String result = "";
-            // Standard OpenAI chat response parsing
+            // 1. Try standard OpenAI "choices[0].message.content"
             if (jsonNode.has("choices") && jsonNode.get("choices").isArray() && jsonNode.get("choices").size() > 0) {
                 JsonNode firstChoice = jsonNode.get("choices").get(0);
-                if (firstChoice.has("message")) {
+                if (firstChoice.has("message") && firstChoice.get("message").has("content")) {
                     result = firstChoice.get("message").get("content").asText().trim();
+                } else if (firstChoice.has("text")) {
+                    result = firstChoice.get("text").asText().trim();
                 }
             }
             
-            // Fallback for other formats
-            if (result.isEmpty() && jsonNode.has("completion")) result = jsonNode.get("completion").asText().trim();
-            if (result.isEmpty() && jsonNode.has("text")) result = jsonNode.get("text").asText().trim();
+            // 2. Try direct "content" or "text" fields (some models/profiles differ)
+            if (result.isEmpty()) {
+                if (jsonNode.has("content")) result = jsonNode.get("content").asText().trim();
+                else if (jsonNode.has("text")) result = jsonNode.get("text").asText().trim();
+                else if (jsonNode.has("completion")) result = jsonNode.get("completion").asText().trim();
+            }
             
+            // 3. Last resort: if we got a response but couldn't parse it, use a meaningful error
+            if (result.isEmpty() && !responseBody.isEmpty()) {
+                System.err.println("Could not parse Bedrock response body: " + responseBody);
+                return "Summary generation was successful but response format was unexpected.";
+            }
+
             // REGEX to strip any <reasoning>...</reasoning> tags if they still appear
             return result.replaceAll("(?s)<reasoning>.*?</reasoning>", "").trim();
         } catch (Exception e) {

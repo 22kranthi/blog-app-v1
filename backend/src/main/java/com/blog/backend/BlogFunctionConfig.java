@@ -53,6 +53,8 @@ public class BlogFunctionConfig {
                         return getBlogQuery(arguments);
                     case "listBlogsByCategory":
                         return listBlogsByCategory(arguments);
+                    case "listBlogsByAuthor":
+                        return listBlogsByAuthor(arguments);
                     default:
                         throw new IllegalArgumentException("Unknown query: " + fieldName);
                 }
@@ -221,6 +223,13 @@ public class BlogFunctionConfig {
         Integer limit = (Integer) args.get("limit");
         String nextToken = (String) args.get("nextToken");
         return blogRepository.listBlogsByCategory(category, limit, nextToken);
+    }
+
+    private Object listBlogsByAuthor(Map<String, Object> args) {
+        String authorId = (String) args.get("authorId");
+        Integer limit = (Integer) args.get("limit");
+        String nextToken = (String) args.get("nextToken");
+        return blogRepository.listBlogsByAuthor(authorId, limit, nextToken);
     }
 
     private java.util.List<String> asStringList(Object obj) {

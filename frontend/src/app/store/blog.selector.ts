@@ -33,3 +33,8 @@ export const getCurrentLimit = createSelector(
   selectBlogState,
   (state: BlogState) => state.currentLimit
 );
+
+export const getSelectedAuthorId = createSelector(
+  selectBlogState,
+  (state: BlogState) => state.selectedAuthorId
+);

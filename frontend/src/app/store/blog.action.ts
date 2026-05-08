@@ -4,7 +4,7 @@ import { Blog, BlogConnection } from  "../model/blog.model";
 
 export const loadBlogs = createAction(
   '[Blog] Load Blogs',
-  props<{ limit?: number }>()
+  props<{ limit?: number, authorId?: string }>()
 );
 
 export const loadBlogsSuccess = createAction(
@@ -19,7 +19,7 @@ export const loadBlogsFailure = createAction(
 
 export const loadMoreBlogs = createAction(
   '[Blog] Load More Blogs',
-  props<{ limit?: number }>()
+  props<{ limit?: number, authorId?: string }>()
 );
 
 export const loadMoreBlogsSuccess = createAction(

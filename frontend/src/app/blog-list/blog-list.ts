@@ -85,8 +85,10 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
       else if (path === 'admin') this.mode = 'admin';
       else this.mode = 'public';
       
-      const limit = this.mode === 'public' ? 3 : 50;
-      this.store.dispatch(loadBlogs({ limit }));
+      const limit = this.mode === 'public' ? 6 : 50;
+      const authorId = this.mode === 'my-blogs' ? this.authService.currentUserId() : undefined;
+      
+      this.store.dispatch(loadBlogs({ limit, authorId: authorId || undefined }));
     });
   }
 

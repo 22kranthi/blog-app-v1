@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
+import java.time.Duration;
+
 @Configuration
 public class AwsConfig {
 
@@ -24,6 +26,7 @@ public class AwsConfig {
         String region = System.getenv().getOrDefault("BEDROCK_REGION", "us-east-1");
         return BedrockRuntimeClient.builder()
                 .region(Region.of(region))
+                .overrideConfiguration(conf -> conf.apiCallTimeout(Duration.ofSeconds(60)))
                 .build();
     }
 

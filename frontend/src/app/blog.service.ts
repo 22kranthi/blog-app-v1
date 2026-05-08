@@ -11,6 +11,7 @@ import {
   DeleteBlogResponse, 
   GetUploadUrlResponse,  
   ListBlogsByCategoryResponse, 
+  ListBlogsByAuthorResponse,
   GetBlogResponse,
   BlogConnection
 } from './model/blog.model';
@@ -28,7 +29,11 @@ export class BlogService {
     return this.authService.isAuthenticated() ? 'userPool' : 'apiKey';
   }
 
-  getBlogs(limit?: number, nextToken?: string | null): Observable<BlogConnection> {
+  getBlogs(limit: number = 6, nextToken: string | null = null, authorId: string | null = null): Observable<BlogConnection> {
+    if (authorId) {
+      return this.getBlogsByAuthor(authorId, limit, nextToken);
+    }
+    
     return from(this._getBlogs(limit, nextToken)).pipe(
       map(res => res.data?.listBlogs || { items: [], nextToken: null })
     );
@@ -49,6 +54,29 @@ export class BlogService {
       variables: { limit, nextToken },
       authMode: this.getAuthMode()
     }) as GraphQLResponse<ListBlogsResponse>;
+  }
+
+  getBlogsByAuthor(authorId: string, limit: number = 6, nextToken: string | null = null): Observable<BlogConnection> {
+    return from(this._getBlogsByAuthor(authorId, limit, nextToken)).pipe(
+      map(res => res.data?.listBlogsByAuthor || { items: [], nextToken: null })
+    );
+  }
+
+  private async _getBlogsByAuthor(authorId: string, limit?: number, nextToken?: string | null): Promise<GraphQLResponse<ListBlogsByAuthorResponse>> {
+    return await this.getClient().graphql({
+      query: `
+        query ListBlogsByAuthor($authorId: String!, $limit: Int, $nextToken: String) {
+          listBlogsByAuthor(authorId: $authorId, limit: $limit, nextToken: $nextToken) {
+            items {
+              id title authorId authorName content categories status imageUrl summary_ai createdAt updatedAt
+            }
+            nextToken
+          }
+        }
+      `,
+      variables: { authorId, limit, nextToken },
+      authMode: this.getAuthMode()
+    }) as GraphQLResponse<ListBlogsByAuthorResponse>;
   }
 
   createBlog(blog: Partial<Blog>): Observable<Blog> {

@@ -6,7 +6,7 @@ import { loadBlogs, loadBlogsSuccess, loadBlogsFailure, addBlog, addBlogSuccess,
 import { switchMap, map, catchError, withLatestFrom } from 'rxjs';
 import { of } from 'rxjs';
 import { NotificationService } from '../notification.service';
-import { getNextToken, getSelectedCategory, getCurrentLimit } from './blog.selector';
+import { getNextToken, getSelectedCategory, getCurrentLimit, getSelectedAuthorId } from './blog.selector';
 
 @Injectable()
 export class BlogEffects {
@@ -19,11 +19,11 @@ export class BlogEffects {
   loadBlogs$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loadBlogs),
-      switchMap(({ limit }) =>
-        this.blogService.getBlogs(limit || 3).pipe(
+      switchMap(({ limit, authorId }) =>
+        this.blogService.getBlogs(limit || 6, null, authorId).pipe(
           map(connection => loadBlogsSuccess({ connection })),
           catchError(error => {
-            this.notification.error('Failed to load blogs. Please check your connection.');
+            this.notification.error('Failed to load blogs.');
             return of(loadBlogsFailure({ error }));
           })
         )
@@ -36,13 +36,20 @@ export class BlogEffects {
       ofType(loadMoreBlogs),
       withLatestFrom(
         this.store.select(getNextToken),
-        this.store.select(getSelectedCategory)
+        this.store.select(getSelectedCategory),
+        this.store.select(getSelectedAuthorId)
       ),
-      switchMap(([{ limit }, nextToken, selectedCategory]) => {
-        const fetchLimit = limit || 3;
-        const obs = selectedCategory 
-          ? this.blogService.getBlogsByCategory(selectedCategory, fetchLimit, nextToken)
-          : this.blogService.getBlogs(fetchLimit, nextToken);
+      switchMap(([{ limit }, nextToken, selectedCategory, selectedAuthorId]) => {
+        const fetchLimit = limit || 6;
+        let obs;
+        
+        if (selectedAuthorId) {
+          obs = this.blogService.getBlogsByAuthor(selectedAuthorId, fetchLimit, nextToken);
+        } else if (selectedCategory) {
+          obs = this.blogService.getBlogsByCategory(selectedCategory, fetchLimit, nextToken);
+        } else {
+          obs = this.blogService.getBlogs(fetchLimit, nextToken);
+        }
           
         return obs.pipe(
           map(connection => loadMoreBlogsSuccess({ connection })),
@@ -65,7 +72,7 @@ export class BlogEffects {
             return addBlogSuccess({ blog });
           }),
           catchError(err => {
-            this.notification.error('Failed to publish blog. Please try again.');
+            this.notification.error('Failed to publish blog.');
             return of({ type: '[Blog] Add Blog Failure' });
           })
         )
@@ -76,12 +83,12 @@ export class BlogEffects {
   updateBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(updateBlog),
-      withLatestFrom(this.store.select(getCurrentLimit)),
-      switchMap(([{ id, title, categories, content, imageUrl, status, authorName }, limit]) =>
+      withLatestFrom(this.store.select(getCurrentLimit), this.store.select(getSelectedAuthorId)),
+      switchMap(([{ id, title, categories, content, imageUrl, status, authorName }, limit, authorId]) =>
         this.blogService.updateBlog({ id, title, categories, content, imageUrl, status, authorName }).pipe(
           map(() => {
             this.notification.success('Blog updated successfully!');
-            return loadBlogs({ limit });
+            return loadBlogs({ limit, authorId: authorId || undefined });
           }),
           catchError(err => {
             this.notification.error('Failed to update blog.');
@@ -95,12 +102,12 @@ export class BlogEffects {
   deleteBlog$ = createEffect(() =>
     this.actions$.pipe(
       ofType(deleteBlog),
-      withLatestFrom(this.store.select(getCurrentLimit)),
-      switchMap(([action, limit]) =>
+      withLatestFrom(this.store.select(getCurrentLimit), this.store.select(getSelectedAuthorId)),
+      switchMap(([action, limit, authorId]) =>
         this.blogService.deleteBlog(action.id).pipe(
           map(() => {
             this.notification.success('Blog deleted.');
-            return loadBlogs({ limit });
+            return loadBlogs({ limit, authorId: authorId || undefined });
           }),
           catchError(err => {
             this.notification.error('Failed to delete blog.');
@@ -118,7 +125,7 @@ export class BlogEffects {
         if (!category) {
           return of(filterBlogsByCategorySuccess({ connection: { items: [], nextToken: null } }));
         }
-        return this.blogService.getBlogsByCategory(category, 3).pipe(
+        return this.blogService.getBlogsByCategory(category, 6).pipe(
           map(connection => filterBlogsByCategorySuccess({ connection })),
           catchError(err => {
             console.error('Failed to filter blogs by category:', err);

@@ -4,7 +4,7 @@ Description: 'Serverless Java Full-Stack Blog Platform - v1.0.1'
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 60
     MemorySize: 1024
     Runtime: java17
     Architectures:
@@ -23,6 +23,7 @@ Resources:
   BlogTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      TableName: !Sub "${AWS::StackName}-BlogTable"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
@@ -30,6 +31,10 @@ Resources:
         - AttributeName: SK
           AttributeType: S
         - AttributeName: status
+          AttributeType: S
+        - AttributeName: authorId
+          AttributeType: S
+        - AttributeName: category
           AttributeType: S
         - AttributeName: createdAt
           AttributeType: S
@@ -46,6 +51,22 @@ Resources:
         - IndexName: StatusIndex
           KeySchema:
             - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: CategoryIndex
+          KeySchema:
+            - AttributeName: category
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: AuthorIndex
+          KeySchema:
+            - AttributeName: authorId
               KeyType: HASH
             - AttributeName: createdAt
               KeyType: RANGE
@@ -163,6 +184,7 @@ Resources:
           getBlog(id: ID!): Blog @aws_api_key @aws_cognito_user_pools
           listBlogs(limit: Int, nextToken: String): BlogConnection @aws_api_key @aws_cognito_user_pools
           listBlogsByCategory(category: String!, limit: Int, nextToken: String): BlogConnection @aws_api_key @aws_cognito_user_pools
+          listBlogsByAuthor(authorId: String!, limit: Int, nextToken: String): BlogConnection @aws_cognito_user_pools
         }
         type Mutation {
           createBlog(title: String!, content: String!, categories: [String], imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
@@ -300,6 +322,14 @@ Resources:
       ApiId: !GetAtt BlogAppSyncApi.ApiId
       TypeName: Query
       FieldName: listBlogsByCategory
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  ListBlogsByAuthorResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Query
+      FieldName: listBlogsByAuthor
       DataSourceName: !GetAtt BlogLambdaDataSource.Name
 
   UpdateBlogResolver:
