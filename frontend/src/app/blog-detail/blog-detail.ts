@@ -66,4 +66,12 @@ export class BlogDetail implements OnInit {
     const words = content.trim().split(/\s+/).length;
     return Math.ceil(words / wordsPerMinute);
   }
+
+  hasBeenUpdated(blog: Blog): boolean {
+    if (!blog.updatedAt || !blog.createdAt) return false;
+    // Compare dates (ignoring tiny millisecond differences if any)
+    const created = new Date(blog.createdAt).getTime();
+    const updated = new Date(blog.updatedAt).getTime();
+    return Math.abs(updated - created) > 1000; // More than 1 second difference
+  }
 }

@@ -19,7 +19,12 @@
       <h1 class="article-title">{{ blog.title }}</h1>
       <div class="author-row">
         <div class="avatar">{{ (blog.authorName || blog.authorId || 'U') | slice:0:2 | uppercase }}</div>
-        <div class="author-info">By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) }}</strong> · {{ blog.createdAt | date:'MMM d, y' }} · {{ getReadingTime(blog.content) }} min read</div>
+        <div class="author-info">
+          By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) }}</strong> 
+          · {{ blog.createdAt | date:'MMM d, y' }}
+          <span *ngIf="hasBeenUpdated(blog)" class="modified"> (Updated {{ blog.updatedAt | date:'MMM d, y' }})</span>
+          · {{ getReadingTime(blog.content) }} min read
+        </div>
       </div>
     </div>
     
