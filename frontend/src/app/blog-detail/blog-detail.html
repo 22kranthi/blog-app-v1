@@ -22,7 +22,7 @@
         <div class="author-info">
           By <strong>{{ blog.authorName || (blog.authorId | slice:0:8) }}</strong> 
           · {{ blog.createdAt | date:'MMM d, y' }}
-          <span *ngIf="hasBeenUpdated(blog)" class="modified"> (Updated {{ blog.updatedAt | date:'MMM d, y' }})</span>
+          <span *ngIf="hasBeenUpdated(blog)" class="modified"> · Edited {{ blog.updatedAt | date:'MMM d, y' }}</span>
           · {{ getReadingTime(blog.content) }} min read
         </div>
       </div>
