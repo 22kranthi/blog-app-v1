@@ -110,7 +110,7 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (category === null) {
-      const limit = this.mode === 'public' ? 3 : 50;
+      const limit = this.mode === 'public' ? 6 : 50;
       this.store.dispatch(loadBlogs({ limit }));
     } else {
       this.store.dispatch(filterBlogsByCategory({ category }));
@@ -139,7 +139,7 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadMore() {
-    this.store.dispatch(loadMoreBlogs({ limit: 3 }));
+    this.store.dispatch(loadMoreBlogs({ limit: 6 }));
   }
 
   edit(id: string) {
