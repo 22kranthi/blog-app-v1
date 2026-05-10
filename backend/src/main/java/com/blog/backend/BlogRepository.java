@@ -27,19 +27,8 @@ public class BlogRepository {
 
     public void saveBlog(Blog blog) {
         logger.info("Saving/Updating blog: {}", blog.getId());
-        
-        // Normalize categories: Trim, Uppercase, and Remove Duplicates
-        List<String> normalizedCategories = new ArrayList<>();
-        if (blog.getCategories() != null) {
-            normalizedCategories = blog.getCategories().stream()
-                .filter(c -> c != null && !c.trim().isEmpty())
-                .map(c -> c.trim().toUpperCase())
-                .distinct()
-                .toList();
-            blog.setCategories(normalizedCategories);
-        }
 
-        // 0. Normalize categories
+        // Normalize categories: Trim, Uppercase, and Remove Duplicates
         List<String> categories = blog.getCategories() != null ? blog.getCategories().stream()
                 .filter(java.util.Objects::nonNull)
                 .map(String::trim)
@@ -111,9 +100,7 @@ public class BlogRepository {
         Blog blog = getBlog(id);
         if (blog == null) return;
 
-        if (blog.getImageUrl() != null) {
-            s3Service.deleteFileFromUrl(blog.getImageUrl());
-        }
+        // S3 image cleanup is handled by BlogFunctionConfig before calling this method
 
         List<WriteRequest> deleteRequests = new ArrayList<>();
         deleteRequests.add(WriteRequest.builder().deleteRequest(DeleteRequest.builder()

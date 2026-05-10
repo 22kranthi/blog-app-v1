@@ -4,9 +4,10 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
-import { getAllBlogs, getLoading } from '../store/blog.selector';
+import { getAllBlogsUnfiltered, getLoading } from '../store/blog.selector';
 import { loadBlogs } from '../store/blog.action';
 import { take, Observable } from 'rxjs';
+import { BlogService } from '../blog.service';
 
 import { Blog } from '../model/blog.model';
 
@@ -22,6 +23,7 @@ export class BlogDetail implements OnInit {
   loading$: Observable<boolean>;
 
   private destroyRef = inject(DestroyRef);
+  private blogService = inject(BlogService);
 
   constructor(
     private store: Store,
@@ -33,7 +35,7 @@ export class BlogDetail implements OnInit {
 
   ngOnInit() {
     // If blogs aren't loaded yet (e.g. direct link), load them
-    this.store.select(getAllBlogs).pipe(take(1)).subscribe(blogs => {
+    this.store.select(getAllBlogsUnfiltered).pipe(take(1)).subscribe(blogs => {
       if (blogs.length === 0) {
         this.store.dispatch(loadBlogs({}));
       }
@@ -42,7 +44,7 @@ export class BlogDetail implements OnInit {
     this.route.paramMap.pipe(
       switchMap(params => {
         const id = params.get('id');
-        return this.store.select(getAllBlogs).pipe(
+        return this.store.select(getAllBlogsUnfiltered).pipe(
           map(blogs => ({
             id,
             blog: id ? blogs.find(b => b.id === id) ?? null : null,
@@ -54,8 +56,13 @@ export class BlogDetail implements OnInit {
     ).subscribe(({ id, blog, hasLoaded }) => {
       if (!id) return;
       this.blog = blog;
+
+      // If blog not found in store after loading, fetch directly from API
       if (!blog && hasLoaded) {
-        this.router.navigate(['/']);
+        this.blogService.getBlog(id).subscribe(fetched => {
+          this.blog = fetched;
+          if (!fetched) this.router.navigate(['/']);
+        });
       }
     });
   }

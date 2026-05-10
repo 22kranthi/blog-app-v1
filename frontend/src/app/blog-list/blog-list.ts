@@ -32,6 +32,8 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
   isAdmin$: Observable<boolean>;
   currentUserId$: Observable<string | null>;
   indicatorStyle = { transform: 'translateX(4px)', width: '48px', opacity: '1' };
+  showAllCategories = false;
+  readonly MAX_VISIBLE_CATEGORIES = 5;
 
   constructor(
     private store: Store, 

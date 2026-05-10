@@ -26,12 +26,40 @@
       <button class="filter-btn" 
               [class.active]="activeCategory === null" 
               (click)="filterByCategory(null, $event)">All</button>
-      <button *ngFor="let cat of categories" 
+      <button *ngFor="let cat of categories | slice:0:MAX_VISIBLE_CATEGORIES" 
               class="filter-btn" 
               [class.active]="activeCategory === cat" 
               (click)="filterByCategory(cat, $event)">
         {{ cat }}
       </button>
+      <button *ngIf="categories.length > MAX_VISIBLE_CATEGORIES"
+              class="filter-btn more-btn"
+              (click)="showAllCategories = true">
+        +{{ categories.length - MAX_VISIBLE_CATEGORIES }} more
+      </button>
+    </div>
+  </div>
+
+  <!-- Category Overlay Modal -->
+  <div class="category-overlay" *ngIf="showAllCategories" (click)="showAllCategories = false">
+    <div class="category-modal" (click)="$event.stopPropagation()">
+      <div class="category-modal-header">
+        <h3>All Categories</h3>
+        <button class="category-modal-close" (click)="showAllCategories = false">✕</button>
+      </div>
+      <div class="category-grid">
+        <button class="category-chip"
+                [class.active]="activeCategory === null"
+                (click)="filterByCategory(null); showAllCategories = false">
+          All
+        </button>
+        <button *ngFor="let cat of (categories$ | async)"
+                class="category-chip"
+                [class.active]="activeCategory === cat"
+                (click)="filterByCategory(cat); showAllCategories = false">
+          {{ cat }}
+        </button>
+      </div>
     </div>
   </div>
 

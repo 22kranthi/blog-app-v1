@@ -105,6 +105,11 @@ export class BlogForm implements OnInit, OnDestroy {
     this.formChanges$.next();
   }
 
+  private getDraftKey(): string {
+    const userId = this.authService.currentUserId() || 'anon';
+    return this.editId ? `draft_${userId}_${this.editId}` : `draft_${userId}_new`;
+  }
+
   saveDraft() {
     if (this.isBrowser && (this.title || this.content || this.categoriesArray.length > 0)) {
       const draft = {
@@ -112,16 +117,14 @@ export class BlogForm implements OnInit, OnDestroy {
         content: this.content,
         categories: this.categoriesArray
       };
-      const key = this.editId ? `draft_${this.editId}` : 'draft_new';
-      localStorage.setItem(key, JSON.stringify(draft));
+      localStorage.setItem(this.getDraftKey(), JSON.stringify(draft));
       this.draftStatus = 'Draft saved automatically';
     }
   }
 
   loadDraft() {
     if (this.isBrowser) {
-      const key = this.editId ? `draft_${this.editId}` : 'draft_new';
-      const saved = localStorage.getItem(key);
+      const saved = localStorage.getItem(this.getDraftKey());
       if (saved) {
         try {
           const draft = JSON.parse(saved);
@@ -135,8 +138,7 @@ export class BlogForm implements OnInit, OnDestroy {
 
   clearDraft() {
     if (this.isBrowser) {
-      const key = this.editId ? `draft_${this.editId}` : 'draft_new';
-      localStorage.removeItem(key);
+      localStorage.removeItem(this.getDraftKey());
     }
   }
 
@@ -269,7 +271,7 @@ export class BlogForm implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Failed to process request. Please try again.");
+      this.notificationService.show('Failed to process request. Please try again.', 'error');
       this.isSubmitting = false;
       this.draftStatus = 'Draft saved automatically';
     }
