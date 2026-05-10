@@ -1,66 +1,28 @@
-package com.blog.backend;
+package com.blog.backend.service;
 
+import com.blog.backend.model.AppSyncEvent;
+import com.blog.backend.model.Blog;
+import com.blog.backend.model.PaginatedResult;
+import com.blog.backend.repository.BlogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 
-@Configuration
-public class BlogFunctionConfig {
+@Service
+public class BlogService {
 
-    private static final Logger logger = LoggerFactory.getLogger(BlogFunctionConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(BlogService.class);
     private final BlogRepository blogRepository;
     private final BedrockService bedrockService;
     private final S3Service s3Service;
 
-    public BlogFunctionConfig(BlogRepository blogRepository, BedrockService bedrockService, S3Service s3Service) {
+    public BlogService(BlogRepository blogRepository, BedrockService bedrockService, S3Service s3Service) {
         this.blogRepository = blogRepository;
         this.bedrockService = bedrockService;
         this.s3Service = s3Service;
-    }
-
-    @Bean
-    public Function<AppSyncEvent, Object> handleRequest() {
-        return event -> {
-            String fieldName = event.getInfo().getFieldName();
-            String parentTypeName = event.getInfo().getParentTypeName();
-            Map<String, Object> arguments = event.getArguments();
-
-            logger.info("Processing GraphQL Request: {}.{}", parentTypeName, fieldName);
-
-            if ("Mutation".equals(parentTypeName)) {
-                switch (fieldName) {
-                    case "createBlog":
-                        return createBlog(arguments, event.getIdentity());
-                    case "getUploadUrl":
-                        return getUploadUrl(arguments, event.getIdentity());
-                    case "deleteBlog":
-                        return deleteBlog(arguments, event.getIdentity());
-                    case "updateBlog":
-                        return updateBlog(arguments, event.getIdentity());
-                    default:
-                        throw new IllegalArgumentException("Unknown mutation: " + fieldName);
-                }
-            } else if ("Query".equals(parentTypeName)) {
-                switch (fieldName) {
-                    case "listBlogs":
-                        return listBlogs(arguments);
-                    case "getBlog":
-                        return getBlogQuery(arguments);
-                    case "listBlogsByCategory":
-                        return listBlogsByCategory(arguments);
-                    case "listBlogsByAuthor":
-                        return listBlogsByAuthor(arguments);
-                    default:
-                        throw new IllegalArgumentException("Unknown query: " + fieldName);
-                }
-            }
-            throw new IllegalArgumentException("Unknown type: " + parentTypeName);
-        };
     }
 
     private boolean isAdmin(AppSyncEvent.Identity identity) {
@@ -81,41 +43,55 @@ public class BlogFunctionConfig {
         return false;
     }
 
-    private Boolean deleteBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
+    public Boolean deleteBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
         String id = (String) args.get("id");
         Blog existing = blogRepository.getBlog(id);
         if (existing == null) {
             throw new RuntimeException("Blog not found");
         }
-        
+
         String username = identity != null && identity.getUsername() != null ? identity.getUsername() : "";
         if (!isAdmin(identity) && !username.equals(existing.getAuthorId())) {
             logger.warn("Delete unauthorized for user: {}", username);
             throw new RuntimeException("Unauthorized: You do not have permission to delete this blog");
         }
-        
+
         // Clean up S3 image if it exists
         if (existing.getImageUrl() != null) {
             logger.info("Cleaning up S3 image for deleted blog: {}", existing.getImageUrl());
             s3Service.deleteFileFromUrl(existing.getImageUrl());
         }
-        
+
         blogRepository.deleteBlog(id);
         logger.info("Deleted blog with ID: {}", id);
         return true;
     }
 
-    private Blog updateBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
+    private void validateBlogInput(String title, String content, java.util.List<String> categories) {
+        if (title != null) {
+            if (title.trim().isEmpty()) throw new IllegalArgumentException("Title cannot be blank");
+            if (title.length() > 200) throw new IllegalArgumentException("Title must be less than 200 characters");
+        }
+        if (content != null) {
+            if (content.trim().isEmpty()) throw new IllegalArgumentException("Content cannot be blank");
+            if (content.length() > 50000) throw new IllegalArgumentException("Content must be less than 50000 characters");
+        }
+        if (categories != null && categories.size() > 5) {
+            throw new IllegalArgumentException("A maximum of 5 categories are allowed");
+        }
+    }
+
+    public Blog updateBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
         String id = (String) args.get("id");
         String username = identity != null && identity.getUsername() != null ? identity.getUsername() : "unknown";
         logger.info("Updating blog ID: {} for user: {}", id, username);
-        
+
         Blog existing = blogRepository.getBlog(id);
         if (existing == null) {
             logger.error("Update failed: Blog not found with ID {}", id);
             throw new RuntimeException("Blog not found");
         }
-        
+
         if (!isAdmin(identity) && !username.equals(existing.getAuthorId())) {
             logger.warn("Update unauthorized for user: {}", username);
             throw new RuntimeException("Unauthorized: You do not have permission to edit this blog");
@@ -128,6 +104,8 @@ public class BlogFunctionConfig {
         String imageUrl = (String) args.get("imageUrl");
         String authorName = (String) args.get("authorName");
 
+        validateBlogInput(title, content, categories);
+
         if (title != null) existing.setTitle(title);
         if (content != null) {
             existing.setContent(content);
@@ -137,7 +115,7 @@ public class BlogFunctionConfig {
         }
         if (categories != null) existing.setCategories(categories);
         if (status != null) existing.setStatus(status);
-        
+
         if (imageUrl != null) {
             // If the image is being changed, delete the old one from S3
             if (existing.getImageUrl() != null && !existing.getImageUrl().equals(imageUrl)) {
@@ -146,7 +124,7 @@ public class BlogFunctionConfig {
             }
             existing.setImageUrl(imageUrl);
         }
-        
+
         if (authorName != null) existing.setAuthorName(authorName);
         existing.setUpdatedAt(java.time.OffsetDateTime.now().toString());
 
@@ -155,10 +133,16 @@ public class BlogFunctionConfig {
         return existing;
     }
 
-    private Blog createBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
+    public Blog createBlog(Map<String, Object> args, AppSyncEvent.Identity identity) {
         String title = (String) args.get("title");
         String content = (String) args.get("content");
         java.util.List<String> categories = asStringList(args.get("categories"));
+        
+        if (title == null || content == null) {
+            throw new IllegalArgumentException("Title and content are required to create a blog");
+        }
+        validateBlogInput(title, content, categories);
+
         String imageUrl = (String) args.get("imageUrl");
         String authorNameArg = (String) args.get("authorName");
         String authorId = identity != null && identity.getUsername() != null ? identity.getUsername() : "anonymous";
@@ -192,7 +176,7 @@ public class BlogFunctionConfig {
         return blog;
     }
 
-    private String getUploadUrl(Map<String, Object> args, AppSyncEvent.Identity identity) {
+    public String getUploadUrl(Map<String, Object> args, AppSyncEvent.Identity identity) {
         if (identity == null || identity.getUsername() == null || identity.getUsername().isBlank()) {
             throw new RuntimeException("Unauthorized: authentication required to upload");
         }
@@ -201,13 +185,13 @@ public class BlogFunctionConfig {
         return s3Service.generatePresignedUrl(filename, contentType, identity.getUsername());
     }
 
-    private BlogRepository.PaginatedResult listBlogs(Map<String, Object> args) {
+    public PaginatedResult listBlogs(Map<String, Object> args) {
         Integer limit = (Integer) args.get("limit");
         String nextToken = (String) args.get("nextToken");
         return blogRepository.listBlogs(limit, nextToken);
     }
 
-    private Blog getBlogQuery(Map<String, Object> args) {
+    public Blog getBlogQuery(Map<String, Object> args) {
         String id = (String) args.get("id");
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id is required");
@@ -215,7 +199,7 @@ public class BlogFunctionConfig {
         return blogRepository.getBlog(id);
     }
 
-    private BlogRepository.PaginatedResult listBlogsByCategory(Map<String, Object> args) {
+    public PaginatedResult listBlogsByCategory(Map<String, Object> args) {
         String category = (String) args.get("category");
         if (category == null || category.isBlank()) {
             throw new IllegalArgumentException("category is required");
@@ -225,7 +209,7 @@ public class BlogFunctionConfig {
         return blogRepository.listBlogsByCategory(category, limit, nextToken);
     }
 
-    private Object listBlogsByAuthor(Map<String, Object> args) {
+    public PaginatedResult listBlogsByAuthor(Map<String, Object> args) {
         String authorId = (String) args.get("authorId");
         Integer limit = (Integer) args.get("limit");
         String nextToken = (String) args.get("nextToken");

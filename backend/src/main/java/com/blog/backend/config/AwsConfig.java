@@ -1,4 +1,4 @@
-package com.blog.backend;
+package com.blog.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

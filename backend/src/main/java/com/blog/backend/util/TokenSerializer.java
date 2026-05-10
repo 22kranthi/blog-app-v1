@@ -1,4 +1,4 @@
-package com.blog.backend;
+package com.blog.backend.util;
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import java.util.Base64;
@@ -13,7 +13,11 @@ public class TokenSerializer {
             return null;
         }
         String serialized = lastEvaluatedKey.entrySet().stream()
-                .map(e -> e.getKey() + ":" + e.getValue().s())
+                .map(e -> {
+                    String type = e.getValue().s() != null ? "S" : (e.getValue().n() != null ? "N" : "UNKNOWN");
+                    String val = "S".equals(type) ? e.getValue().s() : e.getValue().n();
+                    return e.getKey() + ":" + type + ":" + val;
+                })
                 .collect(Collectors.joining("|"));
         return Base64.getEncoder().encodeToString(serialized.getBytes());
     }
@@ -26,8 +30,20 @@ public class TokenSerializer {
         Map<String, AttributeValue> key = new HashMap<>();
         String[] parts = decoded.split("\\|");
         for (String part : parts) {
-            String[] kv = part.split(":", 2);
-            if (kv.length == 2) {
+            String[] kv = part.split(":", 3);
+            if (kv.length == 3) {
+                String k = kv[0];
+                String type = kv[1];
+                String val = kv[2];
+                if ("S".equals(type)) {
+                    key.put(k, AttributeValue.builder().s(val).build());
+                } else if ("N".equals(type)) {
+                    key.put(k, AttributeValue.builder().n(val).build());
+                } else {
+                    key.put(k, AttributeValue.builder().s(val).build()); // Fallback
+                }
+            } else if (kv.length == 2) {
+                // Backwards compatibility for old tokens (which were just key:value)
                 key.put(kv[0], AttributeValue.builder().s(kv[1]).build());
             }
         }

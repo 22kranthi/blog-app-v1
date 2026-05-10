@@ -1,4 +1,4 @@
-package com.blog.backend;
+package com.blog.backend.model;
 
 import java.util.Map;
 

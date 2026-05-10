@@ -1,10 +1,14 @@
-package com.blog.backend;
+package com.blog.backend.repository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
+
+import com.blog.backend.model.Blog;
+import com.blog.backend.model.PaginatedResult;
+import com.blog.backend.util.TokenSerializer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,13 +20,11 @@ public class BlogRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(BlogRepository.class);
     private final DynamoDbClient dynamoDbClient;
-    private final S3Service s3Service;
     private final String tableName = System.getenv().getOrDefault("BLOG_TABLE_NAME", "BlogTable");
     private static final int DEFAULT_LIMIT = 6;
 
-    public BlogRepository(DynamoDbClient dynamoDbClient, S3Service s3Service) {
+    public BlogRepository(DynamoDbClient dynamoDbClient) {
         this.dynamoDbClient = dynamoDbClient;
-        this.s3Service = s3Service;
     }
 
     public void saveBlog(Blog blog) {
@@ -92,7 +94,7 @@ public class BlogRepository {
                 .requestItems(Map.of(tableName, writeRequests))
                 .build();
         
-        dynamoDbClient.batchWriteItem(batchRequest);
+        executeBatchWithRetry(batchRequest);
     }
 
     public void deleteBlog(String id) {
@@ -123,7 +125,7 @@ public class BlogRepository {
                 .requestItems(Map.of(tableName, deleteRequests))
                 .build();
         
-        dynamoDbClient.batchWriteItem(batchRequest);
+        executeBatchWithRetry(batchRequest);
     }
 
     public PaginatedResult listBlogsByCategory(String category, Integer limit, String nextToken) {
@@ -239,7 +241,7 @@ public class BlogRepository {
                                 )).build()).build())
                         .toList();
                 
-                dynamoDbClient.batchWriteItem(BatchWriteItemRequest.builder()
+                executeBatchWithRetry(BatchWriteItemRequest.builder()
                         .requestItems(Map.of(tableName, deleteRequests))
                         .build());
             }
@@ -268,16 +270,29 @@ public class BlogRepository {
         return blog;
     }
 
-    public static class PaginatedResult {
-        private final List<Blog> items;
-        private final String nextToken;
-
-        public PaginatedResult(List<Blog> items, String nextToken) {
-            this.items = items;
-            this.nextToken = nextToken;
+    private void executeBatchWithRetry(BatchWriteItemRequest request) {
+        BatchWriteItemResponse response = dynamoDbClient.batchWriteItem(request);
+        int retries = 0;
+        
+        while (response.hasUnprocessedItems() && !response.unprocessedItems().isEmpty() && retries < 3) {
+            logger.warn("BatchWriteItem returned unprocessed items. Retrying... ({}/3)", retries + 1);
+            try {
+                Thread.sleep((long) Math.pow(2, retries) * 100); // 100ms, 200ms, 400ms
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread interrupted during BatchWriteItem retry", e);
+            }
+            
+            BatchWriteItemRequest retryRequest = BatchWriteItemRequest.builder()
+                    .requestItems(response.unprocessedItems())
+                    .build();
+            response = dynamoDbClient.batchWriteItem(retryRequest);
+            retries++;
         }
-
-        public List<Blog> getItems() { return items; }
-        public String getNextToken() { return nextToken; }
+        
+        if (response.hasUnprocessedItems() && !response.unprocessedItems().isEmpty()) {
+            logger.error("Failed to process all items in BatchWriteItem after 3 retries.");
+            throw new RuntimeException("Failed to write/delete all items to DynamoDB due to throttling/unprocessed items.");
+        }
     }
 }
