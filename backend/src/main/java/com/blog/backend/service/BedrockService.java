@@ -16,9 +16,8 @@ public class BedrockService {
 
     private final BedrockRuntimeClient bedrockClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    // Use the US Inference Profile ID for Llama 3.1 8B (fixes the 'on-demand throughput' error)
-    // Use the OpenAI GPT-OSS 20B model as requested
-    private final String modelId = "openai.gpt-oss-20b-1:0";
+    // The model ID is now provided via Environment Variable to remain flexible
+    private final String modelId = System.getenv().getOrDefault("BEDROCK_MODEL_ID", "openai.gpt-oss-20b-1:0");
 
     public BedrockService(BedrockRuntimeClient bedrockClient) {
         this.bedrockClient = bedrockClient;

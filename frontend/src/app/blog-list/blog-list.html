@@ -22,7 +22,6 @@
 
   <div class="filter-section" *ngIf="mode === 'public' && (hasBlogs$ | async) && (categories$ | async) as categories">
     <div class="filter-group">
-      <div class="filter-indicator" [ngStyle]="indicatorStyle"></div>
       <button class="filter-btn" 
               [class.active]="activeCategory === null" 
               (click)="filterByCategory(null, $event)">All</button>
@@ -74,22 +73,33 @@
           <h3 class="card-title">{{ blog.title }}</h3>
           
           <div *ngIf="blog.summary_ai" class="ai-summary">
-            <div class="ai-summary-label"><span>✦</span> AI summary</div>
+            <div class="ai-summary-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sparkle-icon"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              AI generated summary
+            </div>
             <div class="ai-summary-text truncated">{{ blog.summary_ai }}</div>
           </div>
 
           <div class="card-chips" *ngIf="blog.categories && blog.categories.length > 0">
-            @for (cat of blog.categories | slice:0:2; track cat) {
+            @for (cat of blog.categories | slice:0:3; track cat) {
               <span class="chip-primary">{{ cat | titlecase }}</span>
             }
-            @if (blog.categories.length > 2) {
-              <span class="chip-overflow">+{{ blog.categories.length - 2 }}</span>
+            @if (blog.categories.length > 3) {
+              <span class="chip-overflow">+{{ blog.categories.length - 3 }}</span>
             }
           </div>
 
           <div class="card-footer">
-            <span class="card-meta">{{ blog.authorName || (blog.authorId | slice:0:8) }} · {{ blog.createdAt | date:'MMM d' }}</span>
-            <a [routerLink]="['/blog', blog.id]" class="card-link">Read more →</a>
+            <div class="author-row-small">
+              <div class="author-avatar-small">{{ (blog.authorName || 'U').charAt(0) | uppercase }}</div>
+              <div class="author-details-small">
+                <span class="author-name-small">{{ blog.authorName || (blog.authorId | slice:0:8) }}</span>
+                <span class="card-meta">{{ blog.createdAt | date:'MMM d, yyyy' }} · {{ getReadingTime(blog.content) }} min read</span>
+              </div>
+            </div>
+            <div class="footer-actions">
+              <a [routerLink]="['/blog', blog.id]" class="card-link">Read more →</a>
+            </div>
           </div>
 
           <!-- Admin/Owner Actions -->

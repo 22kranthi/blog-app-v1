@@ -165,4 +165,10 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
   trackById(_index: number, blog: { id: string }) {
     return blog.id;
   }
+
+  getReadingTime(content: string | undefined): number {
+    if (!content) return 1;
+    const wordCount = content.split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.ceil(wordCount / 200));
+  }
 }

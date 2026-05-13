@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: 'Serverless Java Full-Stack Blog Platform - v1.0.1'
 
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: 'openai.gpt-oss-20b-1:0'
+    Description: 'The AWS Bedrock Model ID used for AI summaries'
+
 Globals:
   Function:
     Timeout: 60
@@ -14,6 +20,7 @@ Globals:
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
         BLOG_TABLE_NAME: !Ref BlogTable
         S3_BUCKET_NAME: !Ref BlogImageBucket
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
 
 Resources:
 
@@ -201,6 +208,39 @@ Resources:
       Expires: 1808654400 # April 2027
 
   # ---------------------------------------------------------
+  # WAF WebACL for Rate Limiting
+  # ---------------------------------------------------------
+  BlogWafWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub "${AWS::StackName}-RateLimitACL"
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "${AWS::StackName}-WafMetric"
+      Rules:
+        - Name: RateLimitRule
+          Priority: 1
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 500 # Max 500 requests per 5 minutes per IP
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRuleMetric
+
+  BlogWafAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !GetAtt BlogAppSyncApi.Arn
+      WebACLArn: !GetAtt BlogWafWebACL.Arn
+  # ---------------------------------------------------------
   # IAM Role for Lambda
   # ---------------------------------------------------------
   BlogFunctionRole:
@@ -242,7 +282,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
-                Resource: "*" # Should be restricted to specific models
+                Resource: !Sub "arn:aws:bedrock:*::foundation-model/${BedrockModelId}"
 
   # ---------------------------------------------------------
   # Lambda Function (Spring Cloud Function)
