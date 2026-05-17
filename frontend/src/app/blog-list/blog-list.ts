@@ -87,7 +87,7 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
       else if (path === 'admin') this.mode = 'admin';
       else this.mode = 'public';
       
-      const limit = this.mode === 'public' ? 6 : 50;
+      const limit = this.mode === 'admin' ? 10 : 6;
       const authorId = this.mode === 'my-blogs' ? this.authService.currentUserId() : undefined;
       
       this.store.dispatch(loadBlogs({ limit, authorId: authorId || undefined }));
@@ -112,7 +112,7 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (category === null) {
-      const limit = this.mode === 'public' ? 6 : 50;
+      const limit = this.mode === 'admin' ? 10 : 6;
       this.store.dispatch(loadBlogs({ limit }));
     } else {
       this.store.dispatch(filterBlogsByCategory({ category }));
@@ -141,7 +141,8 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadMore() {
-    this.store.dispatch(loadMoreBlogs({ limit: 6 }));
+    const limit = this.mode === 'admin' ? 10 : 6;
+    this.store.dispatch(loadMoreBlogs({ limit }));
   }
 
   edit(id: string) {

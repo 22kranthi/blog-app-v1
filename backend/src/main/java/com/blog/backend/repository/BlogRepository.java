@@ -74,7 +74,8 @@ public class BlogRepository {
                 
                 mapping.put("id", AttributeValue.builder().s(blog.getId()).build());
                 mapping.put("title", AttributeValue.builder().s(blog.getTitle()).build());
-                mapping.put("authorId", AttributeValue.builder().s(blog.getAuthorId()).build());
+                // NOTE: intentionally NOT putting authorId here — it would pollute the AuthorIndex
+                // and cause false nextTokens in listBlogsByAuthor pagination
                 mapping.put("content", AttributeValue.builder().s(blog.getContent()).build());
                 mapping.put("authorName", AttributeValue.builder().s(blog.getAuthorName() != null ? blog.getAuthorName() : "Unknown").build());
                 mapping.put("createdAt", AttributeValue.builder().s(blog.getCreatedAt()).build());
@@ -153,7 +154,10 @@ public class BlogRepository {
 
     public PaginatedResult listBlogsByAuthor(String authorId, Integer limit, String nextToken) {
         logger.info("Listing blogs for author: {}, limit: {}", authorId, limit);
-        
+        int targetLimit = limit != null ? limit : DEFAULT_LIMIT;
+        List<Blog> resultBlogs = new ArrayList<>();
+        Map<String, AttributeValue> lastKey = nextToken != null && !nextToken.isEmpty() ? TokenSerializer.deserialize(nextToken) : null;
+
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":author", AttributeValue.builder().s(authorId).build());
         expressionAttributeValues.put(":metadata", AttributeValue.builder().s("METADATA").build());
@@ -161,29 +165,36 @@ public class BlogRepository {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#sk", "SK");
 
-        QueryRequest.Builder queryRequestBuilder = QueryRequest.builder()
-                .tableName(tableName)
-                .indexName("AuthorIndex")
-                .keyConditionExpression("authorId = :author")
-                .filterExpression("#sk = :metadata")
-                .expressionAttributeNames(expressionAttributeNames)
-                .expressionAttributeValues(expressionAttributeValues)
-                .scanIndexForward(false);
+        do {
+            QueryRequest.Builder queryRequestBuilder = QueryRequest.builder()
+                    .tableName(tableName)
+                    .indexName("AuthorIndex")
+                    .keyConditionExpression("authorId = :author")
+                    .filterExpression("#sk = :metadata")
+                    .expressionAttributeNames(expressionAttributeNames)
+                    .expressionAttributeValues(expressionAttributeValues)
+                    .scanIndexForward(false)
+                    .limit(targetLimit - resultBlogs.size());
 
-        if (limit != null) queryRequestBuilder.limit(limit);
-        else queryRequestBuilder.limit(DEFAULT_LIMIT);
-        if (nextToken != null && !nextToken.isEmpty()) {
-            queryRequestBuilder.exclusiveStartKey(TokenSerializer.deserialize(nextToken));
-        }
+            if (lastKey != null) {
+                queryRequestBuilder.exclusiveStartKey(lastKey);
+            }
 
-        QueryResponse response = dynamoDbClient.query(queryRequestBuilder.build());
-        List<Blog> blogs = response.items().stream()
-                .map(this::mapToBlog)
-                .toList();
+            QueryResponse response = dynamoDbClient.query(queryRequestBuilder.build());
+            
+            response.items().stream()
+                    .map(this::mapToBlog)
+                    .forEach(resultBlogs::add);
 
-        String next = response.hasLastEvaluatedKey() ? TokenSerializer.serialize(response.lastEvaluatedKey()) : null;
+            if (response.hasLastEvaluatedKey() && !response.lastEvaluatedKey().isEmpty()) {
+                lastKey = response.lastEvaluatedKey();
+            } else {
+                lastKey = null;
+            }
+        } while (lastKey != null && resultBlogs.size() < targetLimit);
 
-        return new PaginatedResult(blogs, next);
+        String next = lastKey != null ? TokenSerializer.serialize(lastKey) : null;
+        return new PaginatedResult(resultBlogs, next);
     }
 
     public PaginatedResult listBlogs(Integer limit, String nextToken) {

@@ -240,12 +240,12 @@
 
 /* Main Grid */
 .blog-grid {
-  max-width: 1400px;
+  max-width: 1200px; /* Reduced from 1400px to keep cards sleek */
   margin: 0 auto;
   padding: 0 24px 3rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 40px; /* Increased gap to add white space and reduce card fatness */
 }
 
 .card {

@@ -112,11 +112,11 @@ export class AdminDashboard implements OnInit {
   }
 
   ngOnInit() {
-    this.store.dispatch(loadBlogs({ limit: 50 }));
+    this.store.dispatch(loadBlogs({ limit: 10 }));
   }
 
   loadMore() {
-    this.store.dispatch(loadMoreBlogs({ limit: 50 }));
+    this.store.dispatch(loadMoreBlogs({ limit: 10 }));
   }
 
   removeBlog(id: string) {

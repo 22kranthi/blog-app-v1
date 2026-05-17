@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { signIn, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+import { signIn, signOut, getCurrentUser, fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 @Injectable({
@@ -45,17 +45,32 @@ export class AuthService {
       const groups = session.tokens?.accessToken?.payload['cognito:groups'] as string[];
       this.isAdmin.set(groups?.includes('ADMIN') || false);
 
-      // Fetch user attributes for display name
-      const attributes = (await session.tokens?.idToken?.payload) as any;
-      const nickname = attributes['nickname'];
-      const email = attributes['email'];
-      
-      if (nickname) {
-        this.userDisplayName.set(nickname);
-      } else if (email) {
-        this.userDisplayName.set(email.split('@')[0]); // Fallback to email prefix
-      } else {
-        this.userDisplayName.set(user.username);
+      // Fetch user attributes for display name using robust fetchUserAttributes
+      try {
+        const attributes = await fetchUserAttributes();
+        const nickname = attributes.nickname;
+        const email = attributes.email;
+        
+        if (nickname) {
+          this.userDisplayName.set(nickname);
+        } else if (email) {
+          this.userDisplayName.set(email.split('@')[0]); // Fallback to email prefix
+        } else {
+          this.userDisplayName.set(user.username);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch user attributes, falling back to tokens:', err);
+        const tokenPayload = session.tokens?.idToken?.payload as any;
+        const nickname = tokenPayload?.nickname;
+        const email = tokenPayload?.email;
+        
+        if (nickname) {
+          this.userDisplayName.set(nickname);
+        } else if (email) {
+          this.userDisplayName.set(email.split('@')[0]);
+        } else {
+          this.userDisplayName.set(user.username);
+        }
       }
 
     } catch (e) {
