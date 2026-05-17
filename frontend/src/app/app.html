@@ -1,45 +1,44 @@
 <nav class="navbar">
   <div class="nav-brand">
-  <a routerLink="/"
-     style="display:inline-flex; width:70px; height:70px; border-radius:50%; overflow:hidden; text-decoration:none;">
-    <img src="assets/logo.png"
-         alt="Logo"
-         style="width:100%; height:100%; object-fit:contain;">
-  </a>
-</div>
-  
+    <a routerLink="/"
+      style="display:inline-flex; width:48px; height:48px; border-radius:50%; overflow:hidden; text-decoration:none;">
+      <img src="assets/logo.png" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+    </a>
+  </div>
+
   <div class="nav-links">
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Home</a>
     @if (authService.isAuthenticated()) {
-      <a routerLink="/my-blogs" routerLinkActive="active" class="nav-link">My Posts</a>
+    <a routerLink="/my-blogs" routerLinkActive="active" class="nav-link">My Posts</a>
     }
     <a routerLink="/add" routerLinkActive="active" class="nav-link">New Post</a>
   </div>
 
   <div class="nav-right">
     @if (authService.isAdmin()) {
-      <a routerLink="/admin" routerLinkActive="active" class="nav-link" style="color: var(--purple-dark); margin-right: 16px;">Dashboard</a>
+    <a routerLink="/admin" routerLinkActive="active" class="nav-link"
+      style="color: var(--purple-dark); margin-right: 16px;">Dashboard</a>
     }
-    
+
     <div class="admin-toggle-wrapper">
       @if (authService.isAdmin()) {
-        <span class="admin-badge" style="margin-right: 12px;">ADMIN</span>
+      <span class="admin-badge" style="margin-right: 12px;">ADMIN</span>
       }
       @if (!authService.isAuthenticated()) {
-        <button class="btn-login" (click)="authService.login()">Login</button>
+      <button class="btn-login" (click)="authService.login()">Login</button>
       } @else {
-        <button class="nav-avatar" (click)="toggleDropdown()" title="Account">
-          {{ initials }}
-        </button>
+      <button class="nav-avatar" (click)="toggleDropdown()" title="Account">
+        {{ initials }}
+      </button>
 
-        @if (isDropdownOpen()) {
-          <div class="avatar-dropdown">
-            <div class="dropdown-header">
-              <span class="dropdown-name">{{ authService.userDisplayName() || 'User' }}</span>
-            </div>
-            <button class="dropdown-item" (click)="logout()">Log out</button>
-          </div>
-        }
+      @if (isDropdownOpen()) {
+      <div class="avatar-dropdown">
+        <div class="dropdown-header">
+          <span class="dropdown-name">{{ authService.userDisplayName() || 'User' }}</span>
+        </div>
+        <button class="dropdown-item" (click)="logout()">Log out</button>
+      </div>
+      }
       }
     </div>
   </div>

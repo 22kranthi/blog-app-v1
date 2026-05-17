@@ -21,7 +21,8 @@ export class App implements OnInit {
   isDropdownOpen = signal(false);
 
   get initials(): string {
-    const name = this.authService.userDisplayName() || 'User';
+    // Attempt to get the first 2 letters of the username, default to 'U'
+    const name = (this.authenticator.user && this.authenticator.user.username) ? this.authenticator.user.username : 'User';
     return name.substring(0, 2).toUpperCase();
   }
 
