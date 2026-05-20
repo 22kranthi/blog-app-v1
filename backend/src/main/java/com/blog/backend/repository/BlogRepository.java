@@ -74,11 +74,12 @@ public class BlogRepository {
                 
                 mapping.put("id", AttributeValue.builder().s(blog.getId()).build());
                 mapping.put("title", AttributeValue.builder().s(blog.getTitle()).build());
-                // NOTE: intentionally NOT putting authorId here — it would pollute the AuthorIndex
-                // and cause false nextTokens in listBlogsByAuthor pagination
+                // NOTE: Put authorId here for AppSync validation, but use createdTime instead of
+                // createdAt to prevent GSI pollution (since AuthorIndex requires both authorId and createdAt)
+                mapping.put("authorId", AttributeValue.builder().s(blog.getAuthorId()).build());
                 mapping.put("content", AttributeValue.builder().s(blog.getContent()).build());
                 mapping.put("authorName", AttributeValue.builder().s(blog.getAuthorName() != null ? blog.getAuthorName() : "Unknown").build());
-                mapping.put("createdAt", AttributeValue.builder().s(blog.getCreatedAt()).build());
+                mapping.put("createdTime", AttributeValue.builder().s(blog.getCreatedAt()).build());
                 
                 if (blog.getImageUrl() != null) mapping.put("imageUrl", AttributeValue.builder().s(blog.getImageUrl()).build());
                 if (blog.getSummary_ai() != null) mapping.put("summary_ai", AttributeValue.builder().s(blog.getSummary_ai()).build());
@@ -269,7 +270,11 @@ public class BlogRepository {
         if (item.containsKey("authorId")) blog.setAuthorId(item.get("authorId").s());
         if (item.containsKey("authorName")) blog.setAuthorName(item.get("authorName").s());
         if (item.containsKey("status")) blog.setStatus(item.get("status").s());
-        if (item.containsKey("createdAt")) blog.setCreatedAt(item.get("createdAt").s());
+        if (item.containsKey("createdAt")) {
+            blog.setCreatedAt(item.get("createdAt").s());
+        } else if (item.containsKey("createdTime")) {
+            blog.setCreatedAt(item.get("createdTime").s());
+        }
         if (item.containsKey("imageUrl")) blog.setImageUrl(item.get("imageUrl").s());
         if (item.containsKey("summary_ai")) blog.setSummary_ai(item.get("summary_ai").s());
         if (item.containsKey("updatedAt")) blog.setUpdatedAt(item.get("updatedAt").s());
