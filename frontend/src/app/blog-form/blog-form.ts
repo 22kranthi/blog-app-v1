@@ -23,6 +23,42 @@ export class BlogForm implements OnInit, OnDestroy {
   categoriesArray: string[] = [];
   content: string = '';
   isSubmitting: boolean = false;
+  currentStep: number = 1;
+
+  get wordCount(): number {
+    return this.content ? this.content.trim().split(/\s+/).filter(Boolean).length : 0;
+  }
+
+  get readingTime(): number {
+    return Math.ceil(this.wordCount / 200);
+  }
+
+  get previewParagraphs(): string[] {
+    return this.content ? this.content.split(/\n\s*\n/).filter(p => p.trim().length > 0) : [];
+  }
+
+  get initials(): string {
+    const name = this.authService.userDisplayName() || 'User';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  goToStep(step: number) {
+    if (step === 3) {
+      if (!this.title.trim()) {
+        this.notificationService.error("Please enter a title to preview. ✍️");
+        return;
+      }
+      if (!this.content.trim()) {
+        this.notificationService.error("Please write some content to preview. 📝");
+        return;
+      }
+    }
+    this.currentStep = step;
+  }
 
   // Dynamic Category Input
   showCategoryInput = false;
@@ -224,6 +260,11 @@ export class BlogForm implements OnInit, OnDestroy {
 
     if (!this.selectedFile && !this.imagePreview) {
       this.notificationService.error("Please upload a cover image! 📸");
+      return;
+    }
+
+    const action = this.editId ? 'update' : 'publish';
+    if (!confirm(`Are you sure you want to ${action} this post?`)) {
       return;
     }
 

@@ -2,105 +2,183 @@
   
   <div class="create-container" *ngIf="isBrowser">
     
-    <!-- Toolbar -->
+    <!-- Toolbar / Steps Header -->
     <div class="toolbar">
       <div class="toolbar-label">{{ editId ? 'Edit post' : 'New post' }}</div>
       <div class="steps">
-        <div class="step active">
-          <div class="step-circle">1</div>
+        <div class="step" 
+             [class.active]="currentStep !== 3 && title.trim().length === 0" 
+             [class.completed]="title.trim().length > 0" 
+             (click)="goToStep(1)" 
+             style="cursor: pointer;">
+          <div class="step-circle">
+            <span *ngIf="title.trim().length > 0">✓</span>
+            <span *ngIf="title.trim().length === 0">1</span>
+          </div>
           <div class="step-label">Details</div>
         </div>
+        
         <div class="step-divider"></div>
-        <div class="step" [class.active]="title.length > 0">
-          <div class="step-circle">2</div>
+        
+        <div class="step" 
+             [class.active]="currentStep !== 3 && title.trim().length > 0 && content.trim().length === 0" 
+             [class.completed]="content.trim().length > 0" 
+             (click)="goToStep(2)" 
+             style="cursor: pointer;">
+          <div class="step-circle">
+            <span *ngIf="content.trim().length > 0">✓</span>
+            <span *ngIf="content.trim().length === 0">2</span>
+          </div>
           <div class="step-label">Content</div>
         </div>
+        
         <div class="step-divider"></div>
-        <div class="step" [class.active]="content.length > 0">
+        
+        <div class="step" 
+             [class.active]="currentStep === 3" 
+             [class.completed]="currentStep === 3"
+             (click)="goToStep(3)" 
+             style="cursor: pointer;">
           <div class="step-circle">3</div>
           <div class="step-label">Preview</div>
         </div>
       </div>
     </div>
 
-    <!-- Title Section -->
-    <div class="title-row">
-      <span class="hint-label">Title</span>
-      <input type="text" class="title-input" placeholder="Your post title…" [(ngModel)]="title" (ngModelChange)="onFieldChange()">
-    </div>
-
-    <!-- Editor Body -->
-    <div class="editor-body">
-      
-      <!-- Content Area -->
-      <div class="content-area">
-        <span class="hint-label">Content</span>
-        <textarea class="content-textarea" 
-                  placeholder="Start writing your post here. Your thoughts deserve space…" 
-                  [(ngModel)]="content" 
-                  (ngModelChange)="onFieldChange()"></textarea>
+    <!-- Write Mode: Full single page editor (visible during Step 1 & 2) -->
+    <div class="editor-pane-wrapper" *ngIf="currentStep !== 3">
+      <!-- Title Section -->
+      <div class="title-row">
+        <span class="hint-label">Title</span>
+        <input type="text" class="title-input" placeholder="Your post title…" [(ngModel)]="title" (ngModelChange)="onFieldChange()">
       </div>
 
-      <!-- Sidebar -->
-      <div class="sidebar">
+      <!-- Editor Body -->
+      <div class="editor-body">
         
-        <!-- Categories -->
-        <div class="sidebar-group">
-          <span class="sidebar-group-label">Category</span>
-          <div class="cat-chips">
-            @for (cat of categoriesArray; track cat; let i = $index) {
-              <div class="cat-chip selected">
-                {{ cat }}
-                <span class="remove-x" (click)="removeCategory(i)">×</span>
-              </div>
-            }
-            
-            @if (showCategoryInput) {
-              <input type="text" class="cat-input-inline" 
-                     [(ngModel)]="newCategory" 
-                     (keyup.enter)="addCategory()" 
-                     (blur)="addCategory()" 
-                     placeholder="Type..." autofocus>
-            } @else {
-              <div class="cat-chip add" (click)="showCategoryInput = true">+ Add</div>
-            }
-          </div>
-        </div>
-
-        <!-- Cover Image -->
-        <div class="sidebar-group">
-          <span class="sidebar-group-label">Cover image</span>
-          <div class="upload-zone" 
-               [class.drag-over]="isDragging"
-               (dragover)="onDragOver($event)"
-               (dragleave)="onDragLeave($event)"
-               (drop)="onDrop($event)"
-               (click)="fileInput.click()">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <div class="upload-text"><span>Browse</span> or drag & drop</div>
-            <div class="upload-sub">JPG, PNG, WebP · max 5MB</div>
-          </div>
-          <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" [disabled]="isSubmitting">
+        <!-- Content Area -->
+        <div class="content-area">
+          <span class="hint-label">Content</span>
+          <textarea class="content-textarea" 
+                    placeholder="Start writing your post here. Your thoughts deserve space…" 
+                    [(ngModel)]="content" 
+                    (ngModelChange)="onFieldChange()"></textarea>
           
-          <!-- Image Preview -->
-          <div *ngIf="imagePreview" class="image-preview-sidebar">
-            <img [src]="imagePreview" alt="Preview">
-            <button class="btn-remove-preview" (click)="removeImage(); $event.stopPropagation()">×</button>
+          <!-- Live Word Count & Reading Time Estimation -->
+          <div class="word-count" *ngIf="content">
+            {{ wordCount }} words · ~{{ readingTime }} min read
           </div>
         </div>
 
+        <!-- Sidebar -->
+        <div class="sidebar">
+          
+          <!-- Categories -->
+          <div class="sidebar-group">
+            <span class="sidebar-group-label">Category</span>
+            <div class="cat-chips">
+              @for (cat of categoriesArray; track cat; let i = $index) {
+                <div class="cat-chip selected">
+                  {{ cat }}
+                  <span class="remove-x" (click)="removeCategory(i)">×</span>
+                </div>
+              }
+              
+              @if (showCategoryInput) {
+                <input type="text" class="cat-input-inline" 
+                       [(ngModel)]="newCategory" 
+                       (keyup.enter)="addCategory()" 
+                       (blur)="addCategory()" 
+                       placeholder="Type..." autofocus>
+              } @else {
+                <div class="cat-chip add" (click)="showCategoryInput = true">+ Add</div>
+              }
+            </div>
+          </div>
+
+          <!-- Cover Image -->
+          <div class="sidebar-group">
+            <span class="sidebar-group-label">Cover image</span>
+            <div class="upload-zone" 
+                 [class.drag-over]="isDragging"
+                 (dragover)="onDragOver($event)"
+                 (dragleave)="onDragLeave($event)"
+                 (drop)="onDrop($event)"
+                 (click)="fileInput.click()">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <div class="upload-text"><span>Browse</span> or drag & drop</div>
+              <div class="upload-sub">JPG, PNG, WebP · max 5MB</div>
+            </div>
+            <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" [disabled]="isSubmitting">
+            
+            <!-- Image Preview -->
+            <div *ngIf="imagePreview" class="image-preview-sidebar">
+              <img [src]="imagePreview" alt="Preview">
+              <button class="btn-remove-preview" (click)="removeImage(); $event.stopPropagation()">×</button>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <!-- Footer -->
+    <!-- Preview Mode (visible during Step 3) matching Detail view design exactly -->
+    <div class="preview-pane" *ngIf="currentStep === 3">
+      
+      <div class="article-container">
+        <!-- Hero Image -->
+        <div class="hero-img" *ngIf="imagePreview">
+          <img [src]="imagePreview" alt="Cover Image">
+        </div>
+
+        <div class="below-hero">
+          <span *ngIf="categoriesArray && categoriesArray.length > 0" class="chip-primary" style="text-transform: uppercase;">
+            {{ categoriesArray[0] }}
+          </span>
+          <h1 class="article-title">{{ title || 'Untitled Post' }}</h1>
+          
+          <div class="author-row">
+            <div class="avatar">{{ initials }}</div>
+            <div class="author-info">
+              By <strong>{{ authService.userDisplayName() || 'Unknown' }}</strong> 
+              · Today 
+              · {{ readingTime }} min read
+            </div>
+          </div>
+        </div>
+
+        <!-- Article Body -->
+        <div class="article-body">
+          <!-- Rendered Paragraphs -->
+          <div class="article-content">
+            @for (para of previewParagraphs; track para) {
+              <p class="article-paragraph">{{ para }}</p>
+            }
+          </div>
+
+          <!-- Mapped Category Tags -->
+          <div class="tags-row" *ngIf="categoriesArray && categoriesArray.length > 0">
+            @for (cat of categoriesArray; track cat) {
+              <span class="tag">{{ cat | titlecase }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Actions -->
     <div class="footer">
       <div class="footer-status">{{ draftStatus }}</div>
       <div class="footer-actions">
-        <button class="btn-cancel" routerLink="/">Cancel</button>
+        <!-- Cancel button when editing, Back button when previewing -->
+        <button class="btn-cancel" *ngIf="currentStep !== 3" routerLink="/">Cancel</button>
+        <button class="btn-cancel" *ngIf="currentStep === 3" (click)="goToStep(1)">← Back to Edit</button>
+        
         <button class="btn-publish" (click)="save()" [disabled]="isSubmitting">
           {{ editId ? 'Update Post →' : 'Publish →' }}
         </button>

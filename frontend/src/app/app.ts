@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, signal, OnInit, NgZone, ChangeDetectorRef, HostListener } from '@angular/core';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AmplifyAuthenticatorModule, AuthenticatorService } from '@aws-amplify/ui-angular';
@@ -19,10 +19,30 @@ export class App implements OnInit {
   cdr = inject(ChangeDetectorRef);
   protected readonly title = signal('blog-app');
   isDropdownOpen = signal(false);
+  mobileMenuOpen = signal(false);
+  scrolled = signal(false);
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (typeof window !== 'undefined') {
+      this.scrolled.set(window.scrollY > 10);
+    }
+  }
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  closeMobileMenu() {
+    this.mobileMenuOpen.set(false);
+  }
 
   get initials(): string {
-    // Attempt to get the first 2 letters of the username, default to 'U'
-    const name = (this.authenticator.user && this.authenticator.user.username) ? this.authenticator.user.username : 'User';
+    const name = this.authService.userDisplayName() || 'User';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
     return name.substring(0, 2).toUpperCase();
   }
 
@@ -32,6 +52,7 @@ export class App implements OnInit {
 
   logout() {
     this.isDropdownOpen.set(false);
+    this.mobileMenuOpen.set(false);
     this.authService.logout();
   }
 
