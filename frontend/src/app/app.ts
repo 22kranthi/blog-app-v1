@@ -29,6 +29,14 @@ export class App implements OnInit {
     }
   }
 
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event) {
+    const target = event.target as HTMLElement;
+    if (this.isDropdownOpen() && !target.closest('.admin-toggle-wrapper')) {
+      this.isDropdownOpen.set(false);
+    }
+  }
+
   toggleMobileMenu() {
     this.mobileMenuOpen.update(v => !v);
   }
