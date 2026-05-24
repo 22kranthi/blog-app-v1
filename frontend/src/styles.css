@@ -13,20 +13,27 @@
   --border-color: #e2e8f0;
   --border-default: #e2e8f0;
   
-  /* Accents */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca; /* indigo-700 */
+  /* Accents (Editorial Charcoal Black) */
+  --primary: #1c1917;
+  --primary-hover: #000000;
   --success: #10b981; /* emerald-500 */
   --success-hover: #059669; /* emerald-600 */
   --danger: #ef4444; /* red-500 */
   --danger-hover: #dc2626; /* red-600 */
 
-  /* Brand Accents (Compatibility) */
-  --purple-dark: #4f46e5;
-  --purple-mid: #818cf8;
-  --purple-light: #c7d2fe;
-  --purple-bg: #eef2ff;
-  --purple-text: #4338ca;
+  /* Brand Accents (Compatibility - Neutralized to Charcoal & Beige) */
+  --purple-dark: #1c1917;
+  --purple-mid: #6b7280;
+  --purple-light: #e2e8f0;
+  --purple-bg: #eee8e0;
+  --purple-text: #1c1917;
+
+  /* Dedicated AI Summary Accent (Kept Purple) */
+  --ai-purple-light: #c7d2fe;
+  --ai-purple-mid: #818cf8;
+  --ai-purple-dark: #4f46e5;
+  --ai-purple-bg: #eef2ff;
+  --ai-purple-text: #4338ca;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -40,11 +47,11 @@
   /* Typography */
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* Premium Amplify UI Theming */
-  --amplify-colors-brand-primary-10: #e0e7ff;
-  --amplify-colors-brand-primary-80: #4f46e5;
-  --amplify-colors-brand-primary-90: #4338ca;
-  --amplify-colors-brand-primary-100: #3730a3;
+  /* Premium Amplify UI Theming (Neutralized) */
+  --amplify-colors-brand-primary-10: #eee8e0;
+  --amplify-colors-brand-primary-80: #1c1917;
+  --amplify-colors-brand-primary-90: #000000;
+  --amplify-colors-brand-primary-100: #000000;
   --amplify-components-authenticator-router-box-shadow: 0 0 0 0 transparent;
   --amplify-components-authenticator-router-background-color: #ffffff;
   --amplify-components-authenticator-router-border-width: 0;
@@ -94,7 +101,7 @@ input, textarea {
 
 /* AI Summary Block */
 .ai-summary {
-  border-left: 2px solid var(--purple-light);
+  border-left: 2px solid var(--ai-purple-light);
   padding: 2px 0 2px 9px;
   margin-bottom: 18px;
 }
@@ -108,7 +115,7 @@ input, textarea {
   gap: 4px;
   font-size: 11px;
   font-weight: 500;
-  color: var(--purple-mid);
+  color: var(--ai-purple-mid);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: 4px;

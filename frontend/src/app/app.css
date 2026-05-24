@@ -400,9 +400,9 @@ amplify-authenticator {
 }
 
 .admin-badge {
-  background: #f5f3ff;
-  color: #4338ca;
-  border: 1px solid #e0e7ff;
+  background: #eee8e0;
+  color: #1c1917;
+  border: 1px solid #e2e8f0;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;

@@ -400,13 +400,13 @@
 
 .preview-pane .chip-primary {
   display: inline-block;
-  background: rgba(238, 235, 255, 0.7);
+  background: #eee8e0;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  color: #6355d8;
+  color: #1c1917;
   padding: 6px 18px;
   border-radius: 50px;
-  border: 1px solid rgba(99, 85, 216, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   font-size: 11px;
   font-weight: 700;
   font-family: var(--font-family);

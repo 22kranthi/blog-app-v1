@@ -18,7 +18,7 @@
     </div>
     
     <div class="below-hero">
-      <span *ngIf="blog.categories && blog.categories.length > 0" class="chip-primary" style="text-transform: uppercase;">{{ blog.categories[0] }}</span>
+      <span *ngIf="blog.categories && blog.categories.length > 0" class="chip-primary">{{ blog.categories[0] | titlecase }}</span>
       <h1 class="article-title">{{ blog.title }}</h1>
       <div class="author-row">
         <div class="avatar">{{ (blog.authorName || blog.authorId || 'U') | slice:0:2 | uppercase }}</div>

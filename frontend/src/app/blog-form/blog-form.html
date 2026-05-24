@@ -136,8 +136,8 @@
         </div>
 
         <div class="below-hero">
-          <span *ngIf="categoriesArray && categoriesArray.length > 0" class="chip-primary" style="text-transform: uppercase;">
-            {{ categoriesArray[0] }}
+          <span *ngIf="categoriesArray && categoriesArray.length > 0" class="chip-primary">
+            {{ categoriesArray[0] | titlecase }}
           </span>
           <h1 class="article-title">{{ title || 'Untitled Post' }}</h1>
           

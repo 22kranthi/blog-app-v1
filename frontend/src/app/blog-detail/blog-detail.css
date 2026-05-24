@@ -85,10 +85,10 @@
   margin-left: 4px;
 }
 .ai-summary.article-view {
-  background: rgba(248, 247, 255, 0.6);
+  background: var(--ai-purple-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(232, 230, 255, 0.8);
+  border: 1px solid var(--ai-purple-light);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 40px;
@@ -129,13 +129,13 @@
 }
 .chip-primary {
   display: inline-block;
-  background: rgba(238, 235, 255, 0.7);
+  background: #eee8e0;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  color: #6355d8;
+  color: #1c1917;
   padding: 6px 18px;
   border-radius: 50px;
-  border: 1px solid rgba(99, 85, 216, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   font-size: 11px;
   font-weight: 700;
   font-family: var(--font-family);
@@ -220,7 +220,7 @@
   top: 0;
   left: 0;
   height: 3.5px;
-  background: linear-gradient(90deg, #7c69ef, #6355d8);
+  background: var(--primary);
   z-index: 9999;
   transition: width 0.1s ease-out;
 }
@@ -267,8 +267,8 @@
 .fab-btn:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  border-color: #7c69ef;
-  color: #7c69ef;
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .fab-btn:active {
