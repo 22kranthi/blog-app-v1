@@ -294,25 +294,25 @@
 }
 
 .card-title {
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 600;
   line-height: 1.35;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 40px;
+  min-height: 50px;
 }
 
 .ai-summary {
-  margin: 12px 0 16px;
+  margin: 6px 0 16px;
   padding: 12px 14px;
-  background: #f3e8ff;
+  background: var(--ai-purple-bg);
   border-radius: 10px;
   font-size: 13px;
-  color: #6b21a8;
+  color: var(--ai-purple-text);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -328,13 +328,13 @@
 }
 
 .sparkle-icon {
-  color: #9333ea;
+  color: var(--ai-purple-mid);
 }
 
 .ai-summary-text {
   font-size: 12px;
   line-height: 1.45;
-  color: #6b21a8;
+  color: var(--ai-purple-text);
   display: -webkit-box;
   -webkit-line-clamp: 2; /* Reduced from 3 to 2 lines */
   -webkit-box-orient: vertical;

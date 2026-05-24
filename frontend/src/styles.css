@@ -28,12 +28,12 @@
   --purple-bg: #eee8e0;
   --purple-text: #1c1917;
 
-  /* Dedicated AI Summary Accent (Kept Purple) */
-  --ai-purple-light: #c7d2fe;
-  --ai-purple-mid: #818cf8;
-  --ai-purple-dark: #4f46e5;
-  --ai-purple-bg: #eef2ff;
-  --ai-purple-text: #4338ca;
+  /* Dedicated AI Summary Accent (Warm Lavender Purple) */
+  --ai-purple-light: #e4d5ff;
+  --ai-purple-mid: #a855f7;
+  --ai-purple-dark: #7e22ce;
+  --ai-purple-bg: #f5f0ff;
+  --ai-purple-text: #581c87;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
