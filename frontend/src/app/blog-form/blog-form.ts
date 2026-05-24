@@ -49,11 +49,11 @@ export class BlogForm implements OnInit, OnDestroy {
   goToStep(step: number) {
     if (step === 3) {
       if (!this.title.trim()) {
-        this.notificationService.error("Please enter a title to preview. ✍️");
+        this.notificationService.error("Please enter a title to preview.");
         return;
       }
       if (!this.content.trim()) {
-        this.notificationService.error("Please write some content to preview. 📝");
+        this.notificationService.error("Please write some content to preview.");
         return;
       }
     }
@@ -254,12 +254,12 @@ export class BlogForm implements OnInit, OnDestroy {
 
   async save() {
     if (!this.title.trim() || this.categoriesArray.length === 0 || !this.content.trim()) {
-      this.notificationService.error("Please fill all the text fields and add a category! 📝");
+      this.notificationService.error("Please fill all the text fields and add a category!");
       return;
     }
 
     if (!this.selectedFile && !this.imagePreview) {
-      this.notificationService.error("Please upload a cover image! 📸");
+      this.notificationService.error("Please upload a cover image!");
       return;
     }
 

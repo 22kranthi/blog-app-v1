@@ -68,7 +68,7 @@ export class BlogEffects {
       switchMap(({ title, categories, content, imageUrl, authorName }) =>
         this.blogService.createBlog({ title, categories, content, imageUrl, authorName }).pipe(
           map(blog => {
-            this.notification.success('Blog published successfully! ✨');
+            this.notification.success('Blog published successfully!');
             return addBlogSuccess({ blog });
           }),
           catchError(err => {
