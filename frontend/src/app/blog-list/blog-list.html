@@ -22,10 +22,12 @@
 
   <div class="filter-section" *ngIf="mode === 'public' && (hasBlogs$ | async) && (categories$ | async) as categories">
     <div class="filter-group">
-      <button class="filter-btn" 
+      <button #filterBtn
+              class="filter-btn" 
               [class.active]="activeCategory === null" 
               (click)="filterByCategory(null, $event)">All</button>
-      <button *ngFor="let cat of categories | slice:0:MAX_VISIBLE_CATEGORIES" 
+      <button #filterBtn
+              *ngFor="let cat of categories | slice:0:MAX_VISIBLE_CATEGORIES" 
               class="filter-btn" 
               [class.active]="activeCategory === cat" 
               (click)="filterByCategory(cat, $event)">
@@ -66,7 +68,7 @@
     @for (blog of (blogList | async); track blog.id) {
       <div class="card">
         <div class="card-image">
-          <img *ngIf="blog.imageUrl" [src]="blog.imageUrl" [alt]="blog.title">
+          <img *ngIf="blog.imageUrl" [src]="blog.imageUrl" [alt]="blog.title" loading="lazy">
         </div>
 
         <div class="card-content">

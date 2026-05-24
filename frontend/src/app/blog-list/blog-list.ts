@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, Input, AfterViewInit, OnDestroy, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable, combineLatest, Subscription } from 'rxjs';
@@ -19,6 +19,8 @@ import { deleteBlog, loadBlogs, filterBlogsByCategory, loadMoreBlogs } from '../
   styleUrl: './blog-list.css'
 })
 export class BlogList implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChildren('filterBtn') filterBtns!: QueryList<ElementRef>;
+
   mode: 'public' | 'my-blogs' | 'admin' = 'public';
   private routeSub?: Subscription;
 
@@ -130,9 +132,11 @@ export class BlogList implements OnInit, AfterViewInit, OnDestroy {
   private resetIndicator() {
     // Retry finding the button if it's not yet in the DOM or not rendered
     const tryReset = (attempts = 0) => {
-      const allBtn = document.querySelector('.filter-btn.active') as HTMLElement;
-      if (allBtn && allBtn.offsetWidth > 0) {
-        this.updateIndicator(allBtn);
+      const activeBtnRef = this.filterBtns?.find(btn => btn.nativeElement.classList.contains('active'));
+      const activeBtn = activeBtnRef?.nativeElement as HTMLElement;
+      
+      if (activeBtn && activeBtn.offsetWidth > 0) {
+        this.updateIndicator(activeBtn);
       } else if (attempts < 10) {
         setTimeout(() => tryReset(attempts + 1), 100);
       }

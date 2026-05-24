@@ -9,6 +9,7 @@ import { loadBlogs } from '../store/blog.action';
 import { take, Observable } from 'rxjs';
 import { BlogService } from '../blog.service';
 import { NotificationService } from '../notification.service';
+import { Title } from '@angular/platform-browser';
 
 import { Blog } from '../model/blog.model';
 
@@ -29,6 +30,7 @@ export class BlogDetail implements OnInit {
   private destroyRef = inject(DestroyRef);
   private blogService = inject(BlogService);
   private notificationService = inject(NotificationService);
+  private titleService = inject(Title);
 
   constructor(
     private store: Store,
@@ -61,12 +63,19 @@ export class BlogDetail implements OnInit {
     ).subscribe(({ id, blog, hasLoaded }) => {
       if (!id) return;
       this.blog = blog;
+      if (blog) {
+        this.titleService.setTitle(`${blog.title} — Modern Source`);
+      }
 
       // If blog not found in store after loading, fetch directly from API
       if (!blog && hasLoaded) {
         this.blogService.getBlog(id).subscribe(fetched => {
           this.blog = fetched;
-          if (!fetched) this.router.navigate(['/']);
+          if (fetched) {
+            this.titleService.setTitle(`${fetched.title} — Modern Source`);
+          } else {
+            this.router.navigate(['/']);
+          }
         });
       }
     });

@@ -21,7 +21,7 @@ import { RouterModule } from '@angular/router';
       height: 70vh;
       text-align: center;
     }
-    h1 { font-size: 8rem; color: #8a2be2; margin: 0; }
+    h1 { font-size: 8rem; color: var(--primary); margin: 0; }
     p { font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 2rem; }
   `]
 })
