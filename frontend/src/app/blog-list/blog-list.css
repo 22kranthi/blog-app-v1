@@ -105,10 +105,11 @@
   color: var(--text-primary);
   border-radius: 30px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .filter-btn:hover {
   background: #f8fafc;
+  transform: translateY(-2px) scale(1.03);
 }
 .filter-btn.active {
   background: #eee8e0;
@@ -224,11 +225,12 @@
   background: white;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .category-chip:hover {
   background: #f8fafc;
+  transform: translateY(-2px) scale(1.03);
 }
 
 .category-chip.active {
@@ -257,14 +259,40 @@
   flex-direction: column;
   height: 100%;
   min-height: 380px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  opacity: 0;
+  animation: cardEntrance 0.6s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
 }
 .card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px) scale(1.01);
   box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.12);
 }
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card:nth-child(1) { animation-delay: 0.04s; }
+.card:nth-child(2) { animation-delay: 0.08s; }
+.card:nth-child(3) { animation-delay: 0.12s; }
+.card:nth-child(4) { animation-delay: 0.16s; }
+.card:nth-child(5) { animation-delay: 0.2s; }
+.card:nth-child(6) { animation-delay: 0.24s; }
+.card:nth-child(7) { animation-delay: 0.28s; }
+.card:nth-child(8) { animation-delay: 0.32s; }
+.card:nth-child(9) { animation-delay: 0.36s; }
+.card:nth-child(10) { animation-delay: 0.4s; }
+.card:nth-child(11) { animation-delay: 0.44s; }
+.card:nth-child(12) { animation-delay: 0.48s; }
 
 .card-image {
   height: 180px;
@@ -408,13 +436,13 @@
   border-radius: 12px;
   background: #eee8e0;
   color: #1c1917;
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
 }
 
 .chip-primary:hover, .chip-overflow:hover {
   background: #e6dfd6;
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.04);
 }
 
 .card-footer {
@@ -467,13 +495,23 @@
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.3s ease;
   display: flex;
   align-items: center;
 }
 
 .card-link:hover {
   color: var(--primary);
+}
+
+.card-link .arrow {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin-left: 4px;
+}
+
+.card-link:hover .arrow {
+  transform: translateX(5px);
 }
 
 .actions-container {

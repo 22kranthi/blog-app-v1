@@ -8,11 +8,12 @@
   margin-bottom: 12px;
   font-size: 13px;
   color: var(--text-secondary);
-  transition: color 0.2s;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-decoration: none;
 }
 .back-link:hover {
   color: var(--purple-dark);
+  transform: translateX(-4px);
 }
 .article-container {
   max-width: 800px;
@@ -156,6 +157,14 @@
   margin-right: 8px;
   margin-bottom: 8px;
   font-weight: 500;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.tag:hover {
+  background: rgba(226, 232, 240, 1);
+  transform: translateY(-2px) scale(1.05);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 /* Empty state */
