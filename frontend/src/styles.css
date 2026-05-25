@@ -162,6 +162,11 @@ html {
 }
 
 /* Page Entrance Animation */
+/* Smooth Page Entrance Animation */
+.page-entrance {
+  animation: fadeSlideIn 0.45s cubic-bezier(0.215, 0.610, 0.355, 1) both;
+}
+
 @keyframes fadeSlideIn {
   from {
     opacity: 0;
@@ -173,8 +178,7 @@ html {
   }
 }
 
-/* Applies animation to page components loaded via router-outlet */
+/* Applies block layout to page components loaded via router-outlet without animation transforms */
 .main-content > * {
   display: block;
-  animation: fadeSlideIn 0.45s cubic-bezier(0.215, 0.610, 0.355, 1) both;
 }

@@ -12,7 +12,7 @@ import { loadBlogs, deleteBlog, loadMoreBlogs } from '../store/blog.action';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="dashboard-container" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+    <div class="dashboard-container page-entrance" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
       <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
         🛡️ Admin Dashboard 
         <span style="font-size: 0.9rem; background: #4f46e5; color: white; padding: 2px 8px; border-radius: 12px;">Active</span>

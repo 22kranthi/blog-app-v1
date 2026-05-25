@@ -1,5 +1,5 @@
 <!-- Skeleton Loading (Full Page Style for Initial Load) -->
-<div *ngIf="(loading$ | async) && (blogList | async)?.length === 0" class="skeleton-screen">
+<div *ngIf="(loading$ | async) && (blogList | async)?.length === 0" class="skeleton-screen page-entrance">
   <div class="skeleton-header"></div>
   <div class="skeleton-filters"></div>
   <div class="skeleton-grid">
@@ -13,7 +13,7 @@
 </div>
 
 <!-- Main Content Area -->
-<div *ngIf="!(loading$ | async) || (blogList | async)?.length" class="main-content">
+<div *ngIf="!(loading$ | async) || (blogList | async)?.length" class="main-content page-entrance">
   
   <div class="header-banner" *ngIf="mode === 'public'">
     <h1>Modern Source</h1>

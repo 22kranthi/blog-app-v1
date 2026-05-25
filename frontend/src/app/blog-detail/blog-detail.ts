@@ -105,7 +105,7 @@ export class BlogDetail implements OnInit {
   onWindowScroll() {
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (scrollHeight > 0) {
-      this.scrollPercent = (window.scrollY / scrollHeight) * 100;
+      this.scrollPercent = Math.min(100, Math.max(0, (window.scrollY / scrollHeight) * 100));
     } else {
       this.scrollPercent = 0;
     }

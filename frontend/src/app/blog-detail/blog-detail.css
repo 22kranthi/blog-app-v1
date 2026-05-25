@@ -217,11 +217,12 @@
 /* Reading Progress Bar */
 .reading-progress-bar {
   position: fixed;
-  top: 0;
+  top: 80px; /* Positioned directly below the 80px sticky navbar */
   left: 0;
-  height: 3.5px;
+  height: 3px;
   background: var(--primary);
-  z-index: 9999;
+  z-index: 999; /* Above content, below dropdowns */
+  max-width: 100%;
   transition: width 0.1s ease-out;
 }
 
@@ -243,7 +244,8 @@
   bottom: 32px;
   right: 32px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row-reverse; /* Side-by-side layout, keeping Copy Link anchored on the right */
+  align-items: center;
   gap: 12px;
   z-index: 1000;
 }

@@ -6,7 +6,7 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [RouterModule],
   template: `
-    <div class="scene-wrapper">
+    <div class="scene-wrapper page-entrance">
       <div class="paper-shape paper-1"></div>
       <div class="paper-shape paper-2"></div>
 
