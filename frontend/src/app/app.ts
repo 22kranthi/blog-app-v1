@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, NgZone, ChangeDetectorRef, HostListener } from '@angular/core';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { AmplifyAuthenticatorModule, AuthenticatorService } from '@aws-amplify/ui-angular';
 
@@ -21,6 +22,8 @@ export class App implements OnInit {
   isDropdownOpen = signal(false);
   mobileMenuOpen = signal(false);
   scrolled = signal(false);
+  isAdminRoute = signal(false);
+  private router = inject(Router);
 
   @HostListener('window:scroll')
   onWindowScroll() {
@@ -86,7 +89,14 @@ export class App implements OnInit {
 
   ngOnInit() {
     this.authService.checkAuthStatus();
-    
+
+    // Track if we're inside the /admin route shell — hides the top navbar
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e: any) => {
+      this.isAdminRoute.set((e.urlAfterRedirects as string).startsWith('/admin'));
+    });
+
     // Fix for Amplify Authenticator dropping change detection events during Forgot Password
     this.authenticator.subscribe((authState) => {
       this.ngZone.run(() => {

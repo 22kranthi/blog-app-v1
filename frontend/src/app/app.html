@@ -1,3 +1,4 @@
+@if (!isAdminRoute()) {
 <div class="nav-overlay" [class.visible]="mobileMenuOpen()" (click)="closeMobileMenu()"></div>
 
 <nav class="navbar" [class.scrolled]="scrolled()" [class.mobile-open]="mobileMenuOpen()">
@@ -71,8 +72,9 @@
     </button>
   </div>
 </nav>
+}
 
-<main class="main-content">
+<main [class.main-content]="!isAdminRoute()">
   <router-outlet></router-outlet>
 </main>
 

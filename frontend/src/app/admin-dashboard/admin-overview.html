@@ -1,0 +1,118 @@
+<div class="overview-wrapper page-entrance">
+
+  <!-- Page Header -->
+  <div class="overview-header">
+    <div>
+      <h1 class="overview-title">Overview</h1>
+      <p class="overview-subtitle">Your platform at a glance</p>
+    </div>
+  </div>
+
+  <!-- Loading shimmer -->
+  @if (loading$ | async) {
+    <div class="stats-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="stat-card skeleton-card">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line tall"></div>
+          <div class="skeleton-line medium"></div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-icon icon-posts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14 2z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <div class="stat-value">{{ totalPosts$ | async }}</div>
+        <div class="stat-label">Total Posts</div>
+        <div class="stat-sub">
+          <span class="stat-badge badge-green">{{ postsThisMonth$ | async }} this month</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-authors">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-value">{{ totalAuthors$ | async }}</div>
+        <div class="stat-label">Total Authors</div>
+        <div class="stat-sub">
+          <span class="stat-badge badge-neutral">Active contributors</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-month">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div class="stat-value">{{ postsThisMonth$ | async }}</div>
+        <div class="stat-label">Posts This Month</div>
+        <div class="stat-sub">
+          <span class="stat-badge badge-neutral">Current month</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-ai">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+        </div>
+        <div class="stat-value">{{ aiSummaries$ | async }}</div>
+        <div class="stat-label">AI Summaries</div>
+        <div class="stat-sub">
+          <span class="stat-badge badge-purple">Bedrock generated</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Posts Section -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Recent Posts</h2>
+        <a routerLink="/admin/content" class="section-action">View all →</a>
+      </div>
+
+      <div class="recent-table">
+        <div class="table-head">
+          <span>Title</span>
+          <span>Author</span>
+          <span>Read time</span>
+          <span>Published</span>
+        </div>
+
+        @for (blog of (recentPosts$ | async); track blog.id) {
+          <a [routerLink]="['/blog', blog.id]" class="table-row" target="_blank">
+            <span class="row-title">{{ blog.title }}</span>
+            <span class="row-author">{{ blog.authorName || 'Unknown' }}</span>
+            <span class="row-meta">{{ getReadingTime(blog.content) }} min</span>
+            <span class="row-meta">{{ blog.createdAt | date:'MMM d, y' }}</span>
+          </a>
+        } @empty {
+          <div class="table-empty">No posts yet.</div>
+        }
+      </div>
+    </div>
+  }
+
+</div>
