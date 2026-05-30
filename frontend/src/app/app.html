@@ -15,10 +15,6 @@
     <a routerLink="/my-blogs" routerLinkActive="active" class="nav-link" (click)="closeMobileMenu()">My Posts</a>
     }
     <a routerLink="/add" routerLinkActive="active" class="nav-link" (click)="closeMobileMenu()">New Post</a>
-    
-    @if (authService.isAdmin()) {
-    <a routerLink="/admin" routerLinkActive="active" class="nav-link mobile-only-link" (click)="closeMobileMenu()">Dashboard</a>
-    }
 
     <!-- Mobile Auth Section inside the Drawer -->
     <div class="mobile-auth-section">
@@ -31,21 +27,18 @@
         <span class="admin-badge">ADMIN</span>
         }
       </div>
+      @if (authService.isAdmin()) {
+      <a routerLink="/admin" class="mobile-admin-link" (click)="closeMobileMenu()">
+        🛡 Admin Dashboard
+      </a>
+      }
       <button class="btn-logout-mobile" (click)="logout()">Log out</button>
       }
     </div>
   </div>
 
   <div class="nav-right">
-    @if (authService.isAdmin()) {
-    <a routerLink="/admin" routerLinkActive="active" class="nav-link desktop-only-link"
-      style="color: var(--primary); margin-right: 16px;">Dashboard</a>
-    }
-
     <div class="admin-toggle-wrapper desktop-only-auth">
-      @if (authService.isAdmin()) {
-      <span class="admin-badge" style="margin-right: 12px;">ADMIN</span>
-      }
       @if (!authService.isAuthenticated()) {
       <button class="btn-login" (click)="authService.login()">Login</button>
       } @else {
@@ -55,9 +48,28 @@
 
       @if (isDropdownOpen()) {
       <div class="avatar-dropdown">
+        <!-- User identity -->
         <div class="dropdown-header">
           <span class="dropdown-name">{{ authService.userDisplayName() || 'User' }}</span>
+          @if (authService.isAdmin()) {
+          <span class="dropdown-role">Administrator</span>
+          }
         </div>
+
+        <!-- Admin-only: Dashboard link -->
+        @if (authService.isAdmin()) {
+        <a routerLink="/admin" class="dropdown-item dropdown-admin-link" (click)="isDropdownOpen.set(false)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          Admin Dashboard
+        </a>
+        <div class="dropdown-divider"></div>
+        }
+
         <button class="dropdown-item" (click)="logout()">Log out</button>
       </div>
       }
