@@ -5,7 +5,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { getAllBlogsUnfiltered, getLoading } from '../store/blog.selector';
-import { loadBlogs, deleteBlog } from '../store/blog.action';
+import { loadBlogs, deleteBlog, loadMoreBlogs } from '../store/blog.action';
+import { getNextToken } from '../store/blog.selector';
 import { Blog } from '../model/blog.model';
 
 type SortField = 'title' | 'authorName' | 'createdAt' | 'categories';
@@ -21,8 +22,9 @@ type SortDir   = 'asc' | 'desc';
 export class AdminContent implements OnInit {
   private store = inject(Store);
 
-  allBlogs$: Observable<Blog[]> = this.store.select(getAllBlogsUnfiltered);
-  loading$: Observable<boolean>  = this.store.select(getLoading);
+  allBlogs$: Observable<Blog[]>      = this.store.select(getAllBlogsUnfiltered);
+  loading$: Observable<boolean>       = this.store.select(getLoading);
+  nextToken$: Observable<string|null> = this.store.select(getNextToken);
 
   // Local state
   searchQuery  = signal('');
@@ -67,8 +69,12 @@ export class AdminContent implements OnInit {
   );
 
   ngOnInit() {
-    this.store.dispatch(loadBlogs({ limit: 200 }));
+    this.store.dispatch(loadBlogs({ limit: 25 }));
     this.allBlogs$.subscribe(blogs => this.allBlogs.set(blogs));
+  }
+
+  loadMore() {
+    this.store.dispatch(loadMoreBlogs({ limit: 25 }));
   }
 
   // ── Sorting ─────────────────────────────────

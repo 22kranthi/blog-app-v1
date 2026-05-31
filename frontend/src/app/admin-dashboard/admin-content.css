@@ -399,11 +399,38 @@ td {
   padding: 12px 16px;
   border-top: 1px solid var(--border-default);
   background: #fafaf9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .footer-count {
   font-size: 12px;
   color: var(--text-tertiary);
+}
+
+.btn-load-more {
+  padding: 7px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-load-more:hover:not(:disabled) {
+  background: #f0ede8;
+  color: var(--text-primary);
+  border-color: #d6d0c8;
+}
+
+.btn-load-more:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ── Skeleton loader ─────────────────────────── */

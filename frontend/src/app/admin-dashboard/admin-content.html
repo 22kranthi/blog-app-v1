@@ -201,11 +201,20 @@
         </tbody>
       </table>
 
-      <!-- Footer count -->
+      <!-- Footer: count + Load More -->
       <div class="table-footer">
         <span class="footer-count">
-          Showing {{ filteredBlogs().length }} of {{ allBlogs().length }} posts
+          Showing {{ filteredBlogs().length }} of {{ allBlogs().length }} loaded posts
         </span>
+        @if (nextToken$ | async) {
+          <button class="btn-load-more" (click)="loadMore()" [disabled]="loading$ | async">
+            @if (loading$ | async) {
+              Loading…
+            } @else {
+              Load 25 more ↓
+            }
+          </button>
+        }
       </div>
 
     }
