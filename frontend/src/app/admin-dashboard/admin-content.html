@@ -1,0 +1,214 @@
+<div class="content-wrapper page-entrance">
+
+  <!-- Page Header -->
+  <div class="content-header">
+    <div>
+      <h1 class="content-title">Content</h1>
+      <p class="content-subtitle">Manage all published posts on the platform</p>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="header-actions">
+      <div class="export-group">
+        <button class="btn-export" (click)="exportCSV()" title="Export as CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          CSV
+        </button>
+        <button class="btn-export" (click)="exportJSON()" title="Export as JSON">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          JSON
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar: Search + Bulk Actions -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search by title, author or category…"
+        [(ngModel)]="searchQuery"
+        [ngModelOptions]="{standalone: true}"
+      />
+      @if (searchQuery()) {
+        <button class="search-clear" (click)="searchQuery.set('')">×</button>
+      }
+    </div>
+
+    <!-- Bulk action bar (only when items are selected) -->
+    @if (selectedIds().size > 0) {
+      <div class="bulk-bar">
+        <span class="bulk-count">{{ selectedIds().size }} selected</span>
+        <button class="btn-bulk-delete" (click)="bulkDelete()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+          </svg>
+          Delete selected
+        </button>
+        <button class="btn-bulk-clear" (click)="clearSelection()">Clear</button>
+      </div>
+    }
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+
+    <!-- Loading state -->
+    @if (loading$ | async) {
+      <div class="table-loading">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell s-check"></div>
+            <div class="skeleton-cell s-title"></div>
+            <div class="skeleton-cell s-author"></div>
+            <div class="skeleton-cell s-cat"></div>
+            <div class="skeleton-cell s-status"></div>
+            <div class="skeleton-cell s-date"></div>
+            <div class="skeleton-cell s-actions"></div>
+          </div>
+        }
+      </div>
+    } @else {
+
+      <table class="content-table">
+        <thead>
+          <tr>
+            <!-- Select All -->
+            <th class="col-check">
+              <input
+                type="checkbox"
+                class="row-checkbox"
+                [checked]="allSelected()"
+                (change)="toggleAll()"
+              />
+            </th>
+            <th class="col-title sortable" (click)="setSort('title')">
+              Title <span class="sort-icon">{{ getSortIcon('title') }}</span>
+            </th>
+            <th class="col-author sortable" (click)="setSort('authorName')">
+              Author <span class="sort-icon">{{ getSortIcon('authorName') }}</span>
+            </th>
+            <th class="col-cat sortable" (click)="setSort('categories')">
+              Categories <span class="sort-icon">{{ getSortIcon('categories') }}</span>
+            </th>
+            <th class="col-status">Status</th>
+            <th class="col-date sortable" (click)="setSort('createdAt')">
+              Published <span class="sort-icon">{{ getSortIcon('createdAt') }}</span>
+            </th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (blog of filteredBlogs(); track blog.id) {
+            <tr class="table-row" [class.row-selected]="isSelected(blog.id)">
+
+              <!-- Checkbox -->
+              <td class="col-check">
+                <input
+                  type="checkbox"
+                  class="row-checkbox"
+                  [checked]="isSelected(blog.id)"
+                  (change)="toggleOne(blog.id)"
+                />
+              </td>
+
+              <!-- Title -->
+              <td class="col-title">
+                <a [routerLink]="['/blog', blog.id]" class="post-title" target="_blank">
+                  {{ blog.title }}
+                </a>
+                <span class="post-meta">{{ getReadingTime(blog.content) }} min read</span>
+              </td>
+
+              <!-- Author -->
+              <td class="col-author">
+                <span class="author-name">{{ blog.authorName || '—' }}</span>
+              </td>
+
+              <!-- Categories -->
+              <td class="col-cat">
+                <div class="cat-chips">
+                  @for (cat of (blog.categories || []).slice(0, 2); track cat) {
+                    <span class="cat-chip">{{ cat | titlecase }}</span>
+                  }
+                  @if ((blog.categories || []).length > 2) {
+                    <span class="cat-chip cat-more">+{{ (blog.categories || []).length - 2 }}</span>
+                  }
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td class="col-status">
+                <span class="status-badge" [class]="getStatusClass(blog.status)">
+                  {{ getStatusLabel(blog.status) }}
+                </span>
+              </td>
+
+              <!-- Date -->
+              <td class="col-date">
+                <span class="date-text">{{ blog.createdAt | date:'MMM d, y' }}</span>
+                @if (blog.updatedAt && blog.updatedAt !== blog.createdAt) {
+                  <span class="date-edited">Edited {{ blog.updatedAt | date:'MMM d' }}</span>
+                }
+              </td>
+
+              <!-- Actions -->
+              <td class="col-actions">
+                <div class="action-group">
+                  <a [routerLink]="['/edit', blog.id]" class="action-btn btn-edit" title="Edit post">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </a>
+                  <button class="action-btn btn-delete" (click)="deleteSingle(blog.id)" title="Delete post">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="table-empty">
+                @if (searchQuery()) {
+                  No posts match "<strong>{{ searchQuery() }}</strong>"
+                } @else {
+                  No posts found.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Footer count -->
+      <div class="table-footer">
+        <span class="footer-count">
+          Showing {{ filteredBlogs().length }} of {{ allBlogs().length }} posts
+        </span>
+      </div>
+
+    }
+  </div>
+
+</div>
