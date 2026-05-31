@@ -5,6 +5,7 @@ import { BlogDetail } from './blog-detail/blog-detail';
 import { AdminShell } from './admin-dashboard/admin-shell';
 import { AdminOverview } from './admin-dashboard/admin-overview';
 import { AdminContent } from './admin-dashboard/admin-content';
+import { AdminUsers } from './admin-dashboard/admin-users';
 import { AdminPlaceholder } from './admin-dashboard/admin-placeholder';
 import { MyBlogs } from './my-blogs/my-blogs';
 import { authGuard, adminGuard } from './auth.guard';
@@ -23,7 +24,7 @@ export const routes: Routes = [
     children: [
       { path: '', component: AdminOverview, title: 'Overview — Admin' },
       { path: 'content', component: AdminContent, title: 'Content — Admin' },
-      { path: 'users', component: AdminPlaceholder, title: 'Users — Admin' },
+      { path: 'users', component: AdminUsers, title: 'Users — Admin' },
       { path: 'analytics', component: AdminPlaceholder, title: 'Analytics — Admin' },
     ]
   },

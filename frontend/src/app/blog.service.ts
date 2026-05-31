@@ -207,4 +207,14 @@ export class BlogService {
       }
     }));
   }
+
+  /** Generic authenticated GraphQL executor for admin operations */
+  async graphqlRequest<T = any>(query: string, variables?: Record<string, any>): Promise<T> {
+    const result = await this.getClient().graphql({
+      query,
+      variables,
+      authMode: 'userPool'
+    });
+    return result as T;
+  }
 }

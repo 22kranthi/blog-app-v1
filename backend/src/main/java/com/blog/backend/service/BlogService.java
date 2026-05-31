@@ -25,7 +25,7 @@ public class BlogService {
         this.s3Service = s3Service;
     }
 
-    private boolean isAdmin(AppSyncEvent.Identity identity) {
+    public boolean isAdminIdentity(AppSyncEvent.Identity identity) {
         if (identity == null || identity.getClaims() == null) return false;
         Object groups = identity.getClaims().get("cognito:groups");
         if (groups instanceof java.util.List) {
@@ -51,7 +51,7 @@ public class BlogService {
         }
 
         String username = identity != null && identity.getUsername() != null ? identity.getUsername() : "";
-        if (!isAdmin(identity) && !username.equals(existing.getAuthorId())) {
+        if (!isAdminIdentity(identity) && !username.equals(existing.getAuthorId())) {
             logger.warn("Delete unauthorized for user: {}", username);
             throw new RuntimeException("Unauthorized: You do not have permission to delete this blog");
         }
@@ -92,7 +92,7 @@ public class BlogService {
             throw new RuntimeException("Blog not found");
         }
 
-        if (!isAdmin(identity) && !username.equals(existing.getAuthorId())) {
+        if (!isAdminIdentity(identity) && !username.equals(existing.getAuthorId())) {
             logger.warn("Update unauthorized for user: {}", username);
             throw new RuntimeException("Unauthorized: You do not have permission to edit this blog");
         }

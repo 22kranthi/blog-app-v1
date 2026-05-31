@@ -3,6 +3,7 @@ package com.blog.backend.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -42,6 +43,14 @@ public class AwsConfig {
     public S3Presigner s3Presigner() {
         String region = System.getenv().getOrDefault("AWS_REGION", "ap-south-2");
         return S3Presigner.builder()
+                .region(Region.of(region))
+                .build();
+    }
+
+    @Bean
+    public CognitoIdentityProviderClient cognitoIdentityProviderClient() {
+        String region = System.getenv().getOrDefault("AWS_REGION", "ap-south-2");
+        return CognitoIdentityProviderClient.builder()
                 .region(Region.of(region))
                 .build();
     }

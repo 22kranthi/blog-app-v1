@@ -2,6 +2,7 @@ package com.blog.backend.config;
 
 import com.blog.backend.model.AppSyncEvent;
 import com.blog.backend.service.BlogService;
+import com.blog.backend.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -15,9 +16,11 @@ public class FunctionConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(FunctionConfig.class);
     private final BlogService blogService;
+    private final UserService userService;
 
-    public FunctionConfig(BlogService blogService) {
+    public FunctionConfig(BlogService blogService, UserService userService) {
         this.blogService = blogService;
+        this.userService = userService;
     }
 
     @Bean
@@ -39,6 +42,9 @@ public class FunctionConfig {
                         return blogService.deleteBlog(arguments, event.getIdentity());
                     case "updateBlog":
                         return blogService.updateBlog(arguments, event.getIdentity());
+                    case "setAdminRole":
+                        boolean callerIsAdmin = blogService.isAdminIdentity(event.getIdentity());
+                        return userService.setAdminRole(arguments, callerIsAdmin);
                     default:
                         throw new IllegalArgumentException("Unknown mutation: " + fieldName);
                 }
@@ -52,6 +58,8 @@ public class FunctionConfig {
                         return blogService.listBlogsByCategory(arguments);
                     case "listBlogsByAuthor":
                         return blogService.listBlogsByAuthor(arguments);
+                    case "listUsers":
+                        return userService.listUsers(arguments);
                     default:
                         throw new IllegalArgumentException("Unknown query: " + fieldName);
                 }

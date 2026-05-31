@@ -1,0 +1,153 @@
+<div class="users-wrapper page-entrance">
+
+  <!-- Header -->
+  <div class="users-header">
+    <div>
+      <h1 class="users-title">Users</h1>
+      <p class="users-subtitle">Manage platform accounts and administrator roles</p>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search by name or email…"
+        [(ngModel)]="searchQuery"
+        [ngModelOptions]="{standalone: true}"
+      />
+      @if (searchQuery()) {
+        <button class="search-clear" (click)="searchQuery.set('')">×</button>
+      }
+    </div>
+  </div>
+
+  <!-- Table card -->
+  <div class="table-card">
+
+    @if (loading()) {
+      <!-- Skeleton -->
+      <div class="skeleton-list">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="skeleton-row">
+            <div class="sk sk-avatar"></div>
+            <div class="sk-info">
+              <div class="sk sk-name"></div>
+              <div class="sk sk-email"></div>
+            </div>
+            <div class="sk sk-badge"></div>
+            <div class="sk sk-date"></div>
+            <div class="sk sk-btn"></div>
+          </div>
+        }
+      </div>
+
+    } @else if (filteredUsers().length === 0) {
+      <div class="empty-state">
+        @if (searchQuery()) {
+          No users match "<strong>{{ searchQuery() }}</strong>"
+        } @else {
+          No users found.
+        }
+      </div>
+
+    } @else {
+
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th class="col-user">User</th>
+            <th class="col-status">Account Status</th>
+            <th class="col-role">Role</th>
+            <th class="col-joined">Joined</th>
+            <th class="col-action">Admin Access</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of filteredUsers(); track user.username) {
+            <tr class="user-row" [class.row-admin]="user.isAdmin">
+
+              <!-- User info -->
+              <td class="col-user">
+                <div class="user-cell">
+                  <div class="user-avatar" [class.avatar-admin]="user.isAdmin">
+                    {{ getInitial(user) }}
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">{{ user.name || user.username }}</span>
+                    <span class="user-email">{{ user.email || '—' }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td class="col-status">
+                <span class="status-chip" [class.status-confirmed]="user.status === 'CONFIRMED'"
+                                          [class.status-unconfirmed]="user.status !== 'CONFIRMED'">
+                  {{ user.status === 'CONFIRMED' ? 'Active' : (user.status || 'Unknown') }}
+                </span>
+              </td>
+
+              <!-- Role -->
+              <td class="col-role">
+                @if (user.isAdmin) {
+                  <span class="role-admin">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Admin
+                  </span>
+                } @else {
+                  <span class="role-user">User</span>
+                }
+              </td>
+
+              <!-- Joined -->
+              <td class="col-joined">
+                <span class="joined-date">{{ user.createdAt ? (user.createdAt | date:'MMM d, y') : '—' }}</span>
+              </td>
+
+              <!-- Toggle admin -->
+              <td class="col-action">
+                <button
+                  class="toggle-btn"
+                  [class.btn-revoke]="user.isAdmin"
+                  [class.btn-grant]="!user.isAdmin"
+                  [disabled]="togglingId() === user.username"
+                  (click)="toggleAdmin(user)"
+                >
+                  @if (togglingId() === user.username) {
+                    <span class="spinner"></span>
+                  } @else if (user.isAdmin) {
+                    Revoke Admin
+                  } @else {
+                    Make Admin
+                  }
+                </button>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Load More -->
+      <div class="table-footer">
+        <span class="footer-count">{{ filteredUsers().length }} users loaded</span>
+        @if (nextToken()) {
+          <button class="btn-load-more" (click)="loadMore()" [disabled]="loadingMore()">
+            {{ loadingMore() ? 'Loading…' : 'Load 25 more ↓' }}
+          </button>
+        }
+      </div>
+
+    }
+  </div>
+
+</div>

@@ -59,6 +59,13 @@
             <version>${aws.java.sdk.version}</version>
         </dependency>
 
+        <!-- AWS SDK for Cognito Identity Provider -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>cognitoidentityprovider</artifactId>
+            <version>${aws.java.sdk.version}</version>
+        </dependency>
+
         <!-- Jackson for JSON parsing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

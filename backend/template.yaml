@@ -187,17 +187,31 @@ Resources:
           items: [Blog]
           nextToken: String
         }
+        type CognitoUser @aws_cognito_user_pools {
+          username: String!
+          email: String
+          name: String
+          createdAt: String
+          status: String
+          isAdmin: Boolean
+        }
+        type UserConnection @aws_cognito_user_pools {
+          items: [CognitoUser]
+          nextToken: String
+        }
         type Query {
           getBlog(id: ID!): Blog @aws_api_key @aws_cognito_user_pools
           listBlogs(limit: Int, nextToken: String): BlogConnection @aws_api_key @aws_cognito_user_pools
           listBlogsByCategory(category: String!, limit: Int, nextToken: String): BlogConnection @aws_api_key @aws_cognito_user_pools
           listBlogsByAuthor(authorId: String!, limit: Int, nextToken: String): BlogConnection @aws_cognito_user_pools
+          listUsers(limit: Int, nextToken: String): UserConnection @aws_cognito_user_pools
         }
         type Mutation {
           createBlog(title: String!, content: String!, categories: [String], imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
           updateBlog(id: ID!, title: String, content: String, categories: [String], status: String, imageUrl: String, authorName: String): Blog @aws_cognito_user_pools
           deleteBlog(id: ID!): Boolean @aws_cognito_user_pools
           getUploadUrl(filename: String!, contentType: String!): String @aws_cognito_user_pools
+          setAdminRole(username: String!, isAdmin: Boolean!): Boolean @aws_cognito_user_pools
         }
 
   BlogAppSyncApiKey:
@@ -283,6 +297,14 @@ Resources:
                 Action:
                   - bedrock:InvokeModel
                 Resource: !Sub "arn:aws:bedrock:*::foundation-model/${BedrockModelId}"
+              - Effect: Allow
+                Action:
+                  - cognito-idp:ListUsers
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                  - cognito-idp:AdminListGroupsForUser
+                Resource: !GetAtt BlogUserPool.Arn
 
   # ---------------------------------------------------------
   # Lambda Function (Spring Cloud Function)
@@ -299,6 +321,7 @@ Resources:
           MAIN_CLASS: com.blog.backend.ServerlessBackendApplication
           SPRING_CLOUD_FUNCTION_DEFINITION: handleRequest
           BEDROCK_REGION: us-east-1
+          USER_POOL_ID: !Ref BlogUserPool
       SnapStart:
         ApplyOn: PublishedVersions
 
@@ -394,6 +417,22 @@ Resources:
       ApiId: !GetAtt BlogAppSyncApi.ApiId
       TypeName: Mutation
       FieldName: getUploadUrl
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  ListUsersResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Query
+      FieldName: listUsers
+      DataSourceName: !GetAtt BlogLambdaDataSource.Name
+
+  SetAdminRoleResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt BlogAppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: setAdminRole
       DataSourceName: !GetAtt BlogLambdaDataSource.Name
 
 Outputs:
