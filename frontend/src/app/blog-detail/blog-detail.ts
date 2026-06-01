@@ -103,14 +103,15 @@ export class BlogDetail implements OnInit {
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
+    const scrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (scrollHeight > 0) {
-      this.scrollPercent = Math.min(100, Math.max(0, (window.scrollY / scrollHeight) * 100));
+      this.scrollPercent = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
     } else {
       this.scrollPercent = 0;
     }
 
-    this.showBackToTop = window.scrollY > 300;
+    this.showBackToTop = scrollTop > 300;
   }
 
   copyLink() {
@@ -158,7 +159,14 @@ export class BlogDetail implements OnInit {
   scrollToTop() {
     window.scrollTo({
       top: 0,
+      left: 0,
       behavior: 'smooth'
     });
+    // Fallback for older mobile browsers that might interrupt smooth scroll
+    setTimeout(() => {
+      if (window.scrollY > 100) {
+        window.scrollTo(0, 0);
+      }
+    }, 800);
   }
 }

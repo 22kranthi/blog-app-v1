@@ -71,9 +71,17 @@
   box-sizing: border-box;
 }
 
-body {
+app-root {
+  display: block;
+}
+
+html, body {
   margin: 0;
   padding: 0;
+  overflow-x: clip;
+}
+
+body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   font-family: var(--font-family);
