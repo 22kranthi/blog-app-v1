@@ -335,3 +335,186 @@ td { padding: 13px 16px; vertical-align: middle; }
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* --- Mobile Responsive overrides --- */
+@media (max-width: 768px) {
+  .users-wrapper {
+    padding: 20px 16px 40px;
+  }
+
+  .users-header {
+    margin-bottom: 24px;
+  }
+
+  .toolbar {
+    padding: 16px;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  /* Table to Cards Conversion */
+  .users-table, 
+  .users-table tbody, 
+  .users-table tr, 
+  .users-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .users-table thead {
+    display: none; /* Hide headers on mobile */
+  }
+
+  .users-table tr.user-row {
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .users-table tr.user-row:nth-child(even) {
+    background: white; /* Reset zebra striping on mobile */
+  }
+
+  td {
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .col-user {
+    margin-bottom: 6px;
+  }
+
+  .col-status, .col-role, .col-joined {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Pseudo labels for table headers context on mobile */
+  .col-status::before {
+    content: "Status:";
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .col-role::before {
+    content: "Role:";
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .col-joined::before {
+    content: "Joined:";
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .col-action {
+    border-top: 1px solid var(--border-default) !important;
+    padding-top: 12px !important;
+    margin-top: 6px;
+    width: 100% !important;
+  }
+
+  .toggle-btn {
+    width: 100% !important;
+    height: 38px;
+    text-align: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .table-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .btn-load-more {
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* Responsive skeletons */
+  .skeleton-row {
+    flex-direction: column;
+    align-items: stretch;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    gap: 12px;
+  }
+
+  .sk-avatar {
+    margin-bottom: 4px;
+  }
+
+  .sk-info {
+    margin-bottom: 6px;
+  }
+
+  .sk-badge, .sk-date, .sk-btn {
+    display: flex;
+    align-items: center;
+  }
+
+  .sk-badge::before {
+    content: "Status:";
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .sk-date::before {
+    content: "Joined:";
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .sk-btn {
+    border-top: 1px solid var(--border-default) !important;
+    padding-top: 12px !important;
+    margin-top: 6px;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    animation: none !important;
+  }
+
+  .sk-btn::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 38px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f0ede8 25%, #e8e4dd 50%, #f0ede8 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+}

@@ -467,3 +467,212 @@ td {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* --- Mobile Responsive overrides --- */
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 20px 16px 40px;
+  }
+
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .export-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .btn-export {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .bulk-bar {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-default);
+  }
+
+  /* Table to Cards Conversion */
+  .content-table, 
+  .content-table tbody, 
+  .content-table tr, 
+  .content-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .content-table thead {
+    display: none; /* Hide standard headers on mobile */
+  }
+
+  .content-table tr.table-row {
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .content-table tr.table-row:nth-child(even) {
+    background: white; /* Reset desktop zebra background */
+  }
+
+  td {
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* Position absolute select checkbox in top left */
+  .col-check {
+    position: absolute;
+    top: 18px;
+    left: 16px;
+    width: auto !important;
+  }
+
+  /* Indent all metadata cells to align nicely next to the checkbox */
+  .col-title {
+    padding-left: 28px !important;
+  }
+
+  .post-title {
+    max-width: 100%;
+    font-size: 15px;
+    line-height: 1.35;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .col-author {
+    padding-left: 28px !important;
+  }
+
+  .col-cat {
+    padding-left: 28px !important;
+  }
+
+  .col-status {
+    display: inline-block;
+    padding-left: 28px !important;
+    width: auto !important;
+  }
+
+  .col-date {
+    display: inline-block;
+    padding-left: 12px !important;
+    width: auto !important;
+    vertical-align: middle;
+  }
+
+  .col-actions {
+    border-top: 1px solid var(--border-default) !important;
+    padding-top: 12px !important;
+    margin-top: 8px;
+    width: 100% !important;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .action-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .action-btn {
+    width: 100%;
+    height: 38px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .table-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .btn-load-more {
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* Responsive Skeleton rows */
+  .skeleton-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    gap: 12px;
+  }
+
+  .skeleton-cell {
+    margin: 0 !important;
+  }
+
+  .s-check {
+    width: 16px;
+    height: 16px;
+  }
+
+  .s-title {
+    width: 80%;
+  }
+
+  .s-author {
+    width: 40%;
+  }
+
+  .s-cat {
+    width: 50%;
+  }
+
+  .s-status {
+    width: 65px;
+    height: 20px;
+  }
+
+  .s-date {
+    width: 80px;
+  }
+
+  .s-actions {
+    width: 100%;
+    height: 38px;
+    border-radius: 8px;
+  }
+}
