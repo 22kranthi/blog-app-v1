@@ -161,6 +161,7 @@ input, textarea {
 /* --- Global Polish & Accessibility --- */
 html {
   scroll-behavior: smooth;
+  overflow-y: scroll;
 }
 
 /* Keyboard accessibility outline */

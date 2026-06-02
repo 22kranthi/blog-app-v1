@@ -432,4 +432,95 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- Mobile Responsiveness --- */
+
+/* Tablet & Mobile: Preview Mode Sync */
+@media (max-width: 768px) {
+  .preview-pane {
+    padding: 12px;
+  }
+  .preview-pane .article-container {
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  .preview-pane .hero-img {
+    height: 180px;
+  }
+  .preview-pane .below-hero {
+    padding: 16px 16px 0;
+  }
+  .preview-pane .article-title {
+    font-size: 20px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  .preview-pane .article-body {
+    padding: 16px 16px 20px;
+  }
+  .preview-pane .article-content {
+    font-size: 13.5px;
+    line-height: 1.75;
+  }
+}
+
+/* Mobile: Form Layout & Spacing */
+@media (max-width: 640px) {
+  .create-wrapper {
+    padding: 16px 0 40px;
+  }
+  .create-container {
+    width: calc(100% - 24px);
+    border-radius: 8px;
+  }
+  .toolbar {
+    padding: 10px 12px;
+  }
+  .step-label {
+    display: none; /* Hide labels to fit step indicators cleanly */
+  }
+  .step-divider {
+    width: 24px; /* Ensure visual spacing between numeric indicators */
+  }
+  .title-row {
+    padding: 14px 16px 12px;
+  }
+  .title-input {
+    font-size: 18px;
+  }
+  .content-area {
+    padding: 12px 16px;
+  }
+  .content-textarea {
+    min-height: 300px;
+    font-size: 13.5px;
+  }
+  .sidebar {
+    padding: 16px;
+    gap: 20px;
+  }
+  .upload-zone {
+    padding: 18px 10px;
+  }
+  .footer {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .footer-status {
+    text-align: center;
+  }
+  .footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn-cancel, .btn-publish {
+    width: 100%;
+    text-align: center;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+}
+
 

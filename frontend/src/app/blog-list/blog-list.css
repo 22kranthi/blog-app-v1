@@ -1,21 +1,74 @@
 .skeleton-screen {
   position: fixed;
-  top: 64px; /* Below navbar */
+  top: 72px; /* Below desktop navbar */
   left: 0;
   width: 100%;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 72px);
   background: var(--bg-surface);
   z-index: 100;
-  padding: 40px 5%;
+  padding: 40px 24px; /* Matches page layout horizontal padding */
+  overflow-y: auto; /* Allow scrolling within skeleton if content exceeds viewport */
+}
+
+@media (max-width: 768px) {
+  .skeleton-screen {
+    top: 64px; /* Below mobile navbar */
+    height: calc(100vh - 64px);
+    padding: 32px 16px; /* Matches mobile page layout padding */
+  }
+}
+
+.skeleton-header {
+  height: 180px;
+  max-width: 1400px;
+  margin: 20px auto 40px;
+  background: #f0ede8;
+  border-radius: 24px;
+  position: relative;
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .skeleton-header {
+    height: 120px;
+    margin: 16px auto 32px;
+    border-radius: 16px;
+  }
+}
+
+.skeleton-filters {
+  height: 38px;
+  max-width: 600px;
+  margin: 0 auto 40px;
+  background: #f0ede8;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .skeleton-filters {
+    margin: 0 auto 24px;
+  }
+}
+
 .skeleton-grid {
-  max-width: 1100px;
+  max-width: 1200px; /* Matches blog-grid max-width exactly! */
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 40px; /* Matches blog-grid gap exactly! */
+}
+
+.skeleton-header::after, .skeleton-filters::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmer 1.5s infinite linear;
 }
 
 .skeleton-card {
